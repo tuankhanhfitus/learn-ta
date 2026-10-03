@@ -932,21 +932,19 @@ I feel the same|mình cũng thấy vậy`);
       return `${esc(w[1])}<small>${x.pos ? '(' + esc(x.pos) + ') ' : ''}${esc(w[0])} ${esc(ipaS(i))}</small>${x.ex ? `<small>“${esc(x.ex)}”</small>${x.vi ? `<small>${esc(x.vi)}</small>` : ''}` : `<small>${busy.size ? 'Đang tạo ví dụ…' : 'Mục này chưa có ví dụ'}</small>`}`
     };
 
-    /* ===== Tích hợp Gemini API (Chống lỗi 429/503 + Tự động chờ khi quá tải) ===== */
+    /* ===== Tích hợp Gemini API (Chỉ tạo khi bấm nút ✨ Tạo ví dụ & loại từ) ===== */
     const getApiKey = () => S.geminiKey || '';
     const setApiKey = (k) => { S.geminiKey = k.trim(); save(); };
     const sleep = ms => new Promise(r => setTimeout(r, ms));
-    let isCallingApi = false; // Khóa không cho gọi nhiều request chồng chéo cùng lúc
+    let isCallingApi = false;
 
     async function callGemini(promptText) {
       const apiKey = getApiKey();
       if (!apiKey) throw new Error("Chưa nhập API Key");
 
-      // Chỉ dùng gemini-3.8-flash (bỏ 2.5-flash để không bị nhảy sang lỗi 404 nữa)
       const model = "gemini-3.8-flash";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-      // Tự động thử lại tối đa 3 lần nếu gặp lỗi 429 (chạm giới hạn phút) hoặc 503 (server bận)
       for (let attempt = 1; attempt <= 3; attempt++) {
         const res = await fetch(url, {
           method: "POST",
@@ -967,11 +965,10 @@ I feel the same|mình cũng thấy vậy`);
           return JSON.parse(rawText);
         }
 
-        // Nếu gặp lỗi 429 (Quá nhanh) hoặc 503 (Quá tải), tự động nghỉ chờ rồi thử lại
         if (res.status === 429 || res.status === 503) {
           if (attempt < 3) {
-            const waitSec = attempt * 6; // Lần 1 chờ 6s, lần 2 chờ 12s
-            vErr = `Server đang bận hoặc chạm giới hạn miễn phí (${res.status}), tự động thử lại sau ${waitSec}s…`;
+            const waitSec = attempt * 6;
+            vErr = `Server đang bận hoặc chạm giới hạn (${res.status}), tự thử lại sau ${waitSec}s…`;
             setMsg(vstat());
             await sleep(waitSec * 1000);
             continue;
@@ -980,7 +977,6 @@ I feel the same|mình cũng thấy vậy`);
           }
         }
 
-        // Các lỗi khác (sai Key, bị chặn...) thì báo ngay
         throw new Error(data?.error?.message || `HTTP ${res.status}`);
       }
     }
@@ -991,12 +987,10 @@ I feel the same|mình cũng thấy vậy`);
         setMsg(vstat());
         return false;
       }
-      // Nếu đang có 1 lượt gọi Gemini chạy ngầm thì bỏ qua, không gọi chồng lên gây lỗi 429
       if (isCallingApi) return false;
 
       const L = VL(), m = mode;
-      // Gom 20 từ mỗi lần gọi để tiết kiệm số lượt request
-      const need = ids.filter(i => !E[ek(i)] && !busy.has(ek(i))).slice(0, 20);
+      const need = ids.filter(i => !E[ek(i)] && !busy.has(ek(i))).slice(0, 15);
       if (!need.length) return true;
 
       isCallingApi = true;
@@ -1040,19 +1034,26 @@ I feel the same|mình cũng thấy vậy`);
       }
     }
 
+    // Đã vô hiệu hóa tự động gọi API ngầm
     function prefetch(soft) {
-      if (isCallingApi) return;
-      const idx = vview === 'card' ? DECK() : IDX();
-      if (!idx.length) return;
-      const ids = vview === 'list' ? idx.slice(0, 20) : [...Array(10)].map((_, j) => idx[(vi + j) % idx.length]);
-      if (soft && ids.slice(0, 3).every(i => E[ek(i)])) return;
-      enrich(ids);
+      return;
     }
 
+    // Chỉ chạy khi người dùng chủ động bấm nút "✨ Tạo ví dụ & loại từ"
     async function genBtn() {
       if (isCallingApi) return;
-      const ids = IDX().filter(i => !E[ek(i)]);
+      let ids = [];
+      if (vview === 'card') {
+        const dk = DECK();
+        if (dk.length) {
+          const ordered = [...Array(dk.length)].map((_, j) => dk[(vi + j) % dk.length]);
+          ids = ordered.filter(i => !E[ek(i)]).slice(0, 10);
+        }
+      } else {
+        ids = IDX().filter(i => !E[ek(i)]).slice(0, 15);
+      }
       if (!ids.length) {
+        vErr = 'Tất cả các từ trong mục này đều đã có ví dụ!';
         setMsg(vstat());
         return;
       }
