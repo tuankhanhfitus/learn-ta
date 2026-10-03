@@ -62,7 +62,6 @@ label.chk input:checked+span{text-decoration:line-through;color:var(--mut)}
 textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:400 16px/1.6 "Be Vietnam Pro",sans-serif;padding:12px;resize:vertical}
 .tag{display:inline-block;background:var(--hl);color:#14213D;font-size:13px;font-weight:700;border-radius:6px;padding:0 8px}
 .res{font-weight:700;margin-top:8px}
-#vg,#vmsg{display:none!important}
 </style>
 </head>
 <body>
@@ -487,7 +486,7 @@ const chk=()=>{const t=$('#qi').value.trim();if(!t||Q.ans!==null)return;Q.ans=t;
 v.onclick=e=>{const o=e.target.closest('[data-o]');if(o&&Q.ans===null){Q.ans=+o.dataset.o;fin(q.opts[Q.ans]===q.i);return}
 if(e.target.id==='qnx'){Q.k++;Q.ans=null;go('vocab')}else if(e.target.id==='qc')chk();else if(e.target.id==='qw')say(w[0]);else if(e.target.id==='qm')recCheck(w[0],h=>{const o=$('#qres');if(o)o.innerHTML=h});else if(e.target.id==='qe')say(info(q.i).ex)};
 const qi=$('#qi');if(qi){qi.focus();qi.onkeydown=e=>{if(e.key==='Enter')chk()}}}
-/* ===== loại từ + ví dụ (tạo bằng Claude, lưu trong trình duyệt) ===== */
+/* ===== loại từ + ví dụ (tạo bằng Gemini API, lưu trong trình duyệt) ===== */
 const CATPOS={'Động từ công sở (Part 5)':'v','Động từ nâng cao':'v','Cụm động từ nâng cao':'phr. v','Giới từ & Cụm động từ':'phr.','Trạng từ nâng cao':'adv','Danh từ công sở (Part 5)':'n','Danh từ nâng cao':'n','Từ nối & Liên từ (Part 5–6)':'conj/prep','Liên từ chuyển ý nâng cao':'conj/adv','Tính từ nâng cao':'adj','Tính từ tần suất (Part 5–7)':'adj','Cụm cố định (collocations)':'phr.'};
 const WN={"negotiate":"v","deadline":"n","refund":"n","reimburse":"v","allocate":"v","implement":"v/n","revenue":"n","candidate":"n","invoice":"n","postpone":"v","mandatory":"adj","renew":"v","inventory":"n","shortage":"n","subsidiary":"n/adj","estimate":"v/n","reliable":"adj","competitive":"adj","warranty":"n","applicant":"n","recruit":"v/n","promote":"v","resign":"v","retire":"v","colleague":"n","supervisor":"n","payroll":"n","benefit":"n/v","orientation":"n","overtime":"n","vacancy":"n","appoint":"v","evaluate":"v","personnel":"n","budget":"n/v","expense":"n","profit":"n/v","loss":"n","invest":"v","audit":"n/v","tax":"n/v","deposit":"v/n","balance":"n/v","installment":"n","quarterly":"adj","overdue":"adj","asset":"n","fund":"n","discount":"v/n","advertise":"v","promotion":"n","launch":"v","brand":"n","survey":"v/n","demand":"v/n","supply":"v/n","merchandise":"n/v","retailer":"n","wholesale":"n","commission":"n","feedback":"n","outlet":"n","compete":"v","trend":"n","loyal":"adj","contract":"n/v","agreement":"n","terms":"n","clause":"n","regulation":"n","policy":"n","permit":"v","license":"n/v","liable":"adj","obligation":"n","penalty":"n","expire":"v","amend":"v","confidential":"adj","authorize":"v","sign":"v/n","itinerary":"n","reservation":"n","luggage":"n","departure":"n","destination":"n","accommodation":"n","customs":"n","delay":"v","fare":"n/v","venue":"n","register":"v","exhibition":"n","banquet":"n","shuttle":"v","manufacture":"v/n","assembly":"n","shipment":"n","deliver":"v","warehouse":"n","defect":"n","maintenance":"n","equipment":"n","supplier":"n","order":"n/v","packaging":"n","durable":"adj","capacity":"n","recall":"v","upgrade":"v","install":"v","backup":"n","password":"n","network":"n","attachment":"n","photocopy":"n","stationery":"n","projector":"n","malfunction":"n","troubleshoot":"v","update":"v","device":"n","database":"n","template":"n","access":"n","agenda":"n","minutes":"n","proposal":"n","approve":"v","reschedule":"v","urgent":"adj","confirm":"v","assign":"v","coordinate":"v","draft":"v/n","revise":"v","submit":"v","withdraw":"v","transfer":"v/n","account":"n","loan":"n","mortgage":"n","credit":"n/v","premium":"n/adj","claim":"v/n","coverage":"n","policyholder":"n","statement":"n","teller":"n","currency":"n","collateral":"adj/n","landlord":"n","tenant":"n","lease":"n/v","rent":"v/n","property":"n","renovation":"n","construction":"n","contractor":"n","blueprint":"n/v","occupancy":"n","utilities":"n","vacant":"adj","premises":"n","relocate":"v","zoning":"n","foundation":"n","appointment":"n","prescription":"n","symptom":"n","physician":"n","pharmacy":"n","checkup":"n","clinic":"n","insurance":"n","dosage":"n","treatment":"n","allergy":"n","vaccination":"n","recover":"v","patient":"n","reserve":"v/n","appetizer":"n","beverage":"n","cuisine":"n","catering":"v/n","waiter":"n","tip":"n/v","menu":"n","ingredient":"n","chef":"n","complimentary":"adj","takeout":"n/adj","specialty":"n","commute":"v","detour":"n","intersection":"n","pedestrian":"n","passenger":"n","vehicle":"n","toll":"n/v","route":"n","platform":"n","timetable":"n","freight":"n","cargo":"n","renewable":"adj","solar":"adj","recycle":"v","pollution":"n","conserve":"v/n","emission":"n","sustainable":"adj","waste":"v/n","efficiency":"n","fuel":"n/v","climate":"n","resource":"n","consumption":"n","curriculum":"n","enroll":"v","tuition":"n","scholarship":"n","seminar":"n","workshop":"n","certificate":"n","instructor":"n","faculty":"n","graduate":"v/n","qualification":"n","assignment":"n","lecture":"n/v","mentor":"n","however":"adv","therefore":"adv","moreover":"adv","nevertheless":"adv","meanwhile":"adv","otherwise":"adv","furthermore":"adv","consequently":"adv","instead":"adv","affect":"v","effect":"n","economic":"adj","economical":"adj","principal":"adj/n","principle":"n","accept":"v","except":"v","advice":"n","advise":"v","later":"adv","latter":"adj","lose":"v","loose":"adj/v","raise":"v","rise":"v","lend":"v","borrow":"v","considerable":"adj","considerate":"adj","compliment":"n/v","complement":"n","efficient":"adj","substantial":"adj","approximately":"adv","promptly":"adv","effectively":"adv","immediately":"adv","currently":"adv","recently":"adv","temporarily":"adv","thoroughly":"adv","potential":"adj/n","adequate":"adj","flexible":"adj","accurate":"adj","reasonable":"adj","available":"adj","appropriate":"adj/v","consistent":"adj","extensive":"adj","innovative":"adj","sufficient":"adj","enclosed":"v","inquire":"v","regarding":"v","sincerely":"adv","notify":"v","acknowledge":"v","inconvenience":"n","assistance":"n","courtesy":"n","correspondence":"n","recipient":"n","forward":"adv","reply":"v/n","enclosure":"n","exclusive":"adj","bargain":"n/v","coupon":"n","voucher":"n","membership":"n","subscription":"n","newsletter":"n","brochure":"n","catalog":"n","flyer":"n","testimonial":"n","announcement":"n","complaint":"n","compensation":"n","courteous":"adj","satisfaction":"n","resolve":"v","inquiry":"n","replace":"v","exchange":"n/v","receipt":"n","return":"v/n","damaged":"v/adj","defective":"adj","apologize":"v","representative":"n","strategy":"n","objective":"n","initiative":"n","merger":"n","acquisition":"n","restructure":"v","expand":"v","downsize":"v","outsource":"v","stakeholder":"n","shareholder":"n","executive":"n/adj","headquarters":"n","branch":"n","department":"n","cubicle":"n","supplies":"n","shred":"n/v","photocopier":"n","reception":"n","lobby":"n","elevator":"n","courier":"n","storage":"n","cabinet":"n","stapler":"n","significant":"adj","remarkable":"adj","tentative":"adj","preliminary":"adj","comprehensive":"adj","ongoing":"adj","upcoming":"adj","previous":"adj","former":"adj","prospective":"adj","outstanding":"adj","valid":"adj","optional":"adj","accessible":"adj","convenient":"adj","acquire":"v","accomplish":"v","achieve":"v","adjust":"v","anticipate":"v","arrange":"v","assess":"v","attract":"v","collaborate":"v","conduct":"v","contribute":"v","demonstrate":"v","distribute":"v","enhance":"v","ensure":"v","facilitate":"v","generate":"v","indicate":"v","maintain":"v","oversee":"v","perform":"v","require":"v","specify":"v","utilize":"v","undertake":"v","expertise":"n","procedure":"n","requirement":"n","attendance":"n","accomplishment":"n","expansion":"n","enrollment":"n","installation":"n","supervision":"n","leadership":"n","reputation":"n","impression":"n","priority":"n","workload":"n","incentive":"n","productivity":"n","annually":"adv","monthly":"n","biweekly":"adj/n","shortly":"adv","formerly":"adv","subsequent":"adj","throughout":"adv","within":"adv","purchase":"v/n","vendor":"n","cashier":"n/v","checkout":"n","aisle":"n","display":"v","bulk":"n/v","shelf":"n","clearance":"n","export":"v/n","import":"n/v","tariff":"n","trade":"n/v","shipping":"n","container":"n","port":"n","quota":"n","distributor":"n","logistics":"n","perishable":"n","fragile":"adj","consignment":"n","domestic":"adj","overseas":"adv/adj","prototype":"n","machinery":"n","assemble":"v","calibrate":"v","inspect":"v","specification":"n","component":"n","output":"n","automation":"n","hazard":"n","overhaul":"v","evacuate":"v","campaign":"n/v","slogan":"n","endorsement":"n","sponsor":"v","publicity":"n","demographic":"n","consumer":"n","spokesperson":"n","trademark":"n","outreach":"n","dividend":"n","stock":"n","portfolio":"n","equity":"n","liability":"n","turnover":"n","bankruptcy":"n","forecast":"v","overhead":"adj/adv","subsidy":"n","surplus":"n/adj","deficit":"n","probation":"n","severance":"n","referral":"n","reference":"n","internship":"n","trainee":"n","seniority":"n","workforce":"n","appraisal":"n","grievance":"n","tenure":"n","shift":"v/n","freelance":"n","delegate":"v","panel":"n/v","badge":"n","booth":"n","exhibitor":"n","attendee":"n","plenary":"adj","session":"n","presenter":"n","handout":"n","proceedings":"n","keynote":"v/n","poster":"n","suite":"n","concierge":"n","amenities":"n","housekeeping":"n","rate":"n","layover":"n","sightseeing":"n","cancellation":"n","lawsuit":"n","plaintiff":"n","defendant":"n","settlement":"n","jurisdiction":"n","patent":"n","copyright":"n","infringement":"n","testimony":"n","attorney":"n","witness":"v/n","verdict":"n","compliance":"n","violation":"n","software":"n","hardware":"n","firewall":"n","server":"n","cloud":"n","bandwidth":"n","download":"v","upload":"v","wireless":"n","encryption":"n","spam":"n/v","bug":"n/v","patch":"n","interface":"n","publish":"v","edition":"n","editor":"n","journalist":"n","broadcast":"n/v","headline":"n/v","article":"n","reporter":"n","column":"n","circulation":"n","review":"v/n","audience":"n","premiere":"n","rehearsal":"n","gallery":"n","artwork":"n","performance":"n","appliance":"n","furniture":"n","apparel":"n","fabric":"n","cosmetics":"n","grocery":"n","produce":"v","label":"v/n","secondhand":"adj/adv","refurbished":"v","fixture":"n","accommodate":"v","advocate":"v","circulate":"v","clarify":"v","compile":"v","comprise":"v","convene":"v","designate":"v","discontinue":"v","dispatch":"v/n","disclose":"v","eliminate":"v","endorse":"v","exceed":"v","expedite":"v","finalize":"v","incur":"v","initiate":"v","integrate":"v","monitor":"v","prioritize":"v","reinforce":"v","restore":"v","retain":"v","streamline":"v","withhold":"v","affordable":"adj","ambitious":"adj","beneficial":"adj","capable":"adj","cautious":"adj/n","cooperative":"adj/n","diligent":"adj","eligible":"adj","enthusiastic":"adj","feasible":"adj","hazardous":"adj","imminent":"adj","mutual":"adj","notable":"adj","obsolete":"adj","punctual":"adj","rigorous":"adj","sturdy":"adj","versatile":"adj","widespread":"adj","thorough":"adj","accordingly":"adv","additionally":"adv","alternatively":"adv","briefly":"adv","closely":"adv","collectively":"adv","comparatively":"adv","conveniently":"adv","drastically":"adv","entirely":"adv","eventually":"adv","exclusively":"adv","gradually":"adv","increasingly":"adv","markedly":"adv","merely":"adv","notably":"adv","occasionally":"adv","previously":"adv","primarily":"adv","rarely":"adv","relatively":"adv","steadily":"adv","strictly":"adv","advantage":"n","aspect":"n","authority":"n","challenge":"v/n","circumstance":"n","commitment":"n","concern":"v/n","convenience":"n","criterion":"n","dispute":"v/n","enhancement":"n","expectation":"n","fluctuation":"n","guideline":"n","hardship":"n","implication":"n","milestone":"n","outcome":"n","overview":"n","preference":"n","prospect":"n","reimbursement":"n","safeguard":"v/n","setback":"n","threshold":"n","transition":"n","voicemail":"n","extension":"n","operator":"n","dial":"v/n","directory":"n","reach":"v","boarding":"n","gate":"n","announce":"v","shoppers":"n","notice":"v/n","cooperation":"n","listeners":"n","host":"n","suggest":"v","objection":"n","consensus":"n","vote":"v/n","motion":"n","adjourn":"v","quorum":"n","brainstorm":"n","outline":"v/n","summarize":"v","parcel":"n/v","express":"v","signature":"n","restock":"v","repair":"v/n","leak":"n/v","broken":"adj","faulty":"adj","plumber":"n","electrician":"n","technician":"n","inspection":"n","routine":"n","clogged":"adj/v","fix":"v","handyman":"n","skill":"n","certification":"n","advancement":"n","competence":"n","proficiency":"n","fluency":"n","aptitude":"n","statistics":"n","figure":"n","chart":"n/v","graph":"n","percentage":"n","average":"adj/v","majority":"n","minority":"n","respondent":"n/adj","sample":"n","data":"n","peak":"n","decline":"v/n","surge":"v/n","plunge":"v","steady":"adj/v","procurement":"n","bid":"v","tender":"adj","quotation":"n","ceremony":"n","award":"n","honor":"v/n","anniversary":"n","fundraiser":"n","charity":"n","donation":"n","volunteer":"v/n","speech":"n","toast":"v/n","farewell":"n","celebrate":"v","commemorate":"v","gala":"n","opening":"n/adj","preferred":"adj/v","salary":"n","relocation":"n","remote":"adj","hybrid":"n","shortlist":"n","seasonal":"adj","position":"n","corridor":"n","stairway":"n","floor":"n","wing":"n","entrance":"n","exit":"n","basement":"n","rooftop":"n","courtyard":"n","facility":"n","restroom":"n","auditorium":"n","cafeteria":"n","lounge":"v","lightweight":"n/adj","portable":"adj","compact":"adj/n","waterproof":"adj","adjustable":"adj","ergonomic":"adj","authentic":"adj","sleek":"adj/v","similarly":"adv","likewise":"adv"};
 function pos0(w){if(mode==='chat')return 'cụm từ';if(CATPOS[w[3]])return CATPOS[w[3]];const t=w[0];if(WN[t])return WN[t];if(!/^[a-z]+$/.test(t))return '';
@@ -519,16 +518,87 @@ const lineHTML=(i,k)=>{const L=VL(),x=info(i);return `<div class="line" data-i="
 const cardFace=(i,f,n,t)=>{const w=VL()[i],x=info(i);
 if(!f)return `${esc(w[0])}${ipaS(i)?`<small class="ipa">${esc(ipaS(i))}</small>`:''}<small>${x.pos?'('+esc(x.pos)+') · ':''}${esc(w[3])} · ${n}/${t}</small>`;
 return `${esc(w[1])}<small>${x.pos?'('+esc(x.pos)+') ':''}${esc(w[0])} ${esc(ipaS(i))}</small>${x.ex?`<small>“${esc(x.ex)}”</small>${x.vi?`<small>${esc(x.vi)}</small>`:''}`:`<small>${busy.size?'Đang tạo ví dụ…':'Mục này chưa có ví dụ'}</small>`}`};
-let sampleP=null;const getSample=()=>sampleP||(sampleP=(window.claude&&claude.use?claude.use('sample'):Promise.resolve(null)).catch(()=>null));
-async function enrich(ids){const sm=await getSample();if(!sm){vErr='tính năng tạo ví dụ chưa khả dụng';setMsg(vstat());return false}
-const L=VL(),m=mode;const need=ids.filter(i=>!E[ek(i)]&&!busy.has(ek(i))).slice(0,20);if(!need.length)return true;
-const keys={};need.forEach(i=>{keys[L[i][0]]=m+'|'+L[i][0];busy.add(m+'|'+L[i][0])});setMsg(vstat());
-const items=JSON.stringify(need.map(i=>({w:L[i][0],vi:L[i][1]})));
-const kind=m==='chat'?'a short, natural everyday spoken line that uses the phrase':'one natural business-English sentence in TOEIC style (8-15 words) that uses the word';
-const prompt=`For each item return a JSON array of objects {"w": the item text exactly as given, "pos": its part of speech in the example using only n, v, adj, adv, prep, conj, phr. v, phr. or n/v, "ex": ${kind}, "vi": the Vietnamese translation of the sentence}. Return only the JSON array. Items: ${items}`;
-try{const r=await sm.json(prompt,{modelTier:'quick'});(Array.isArray(r)?r:(r&&r.items)||[]).forEach(o=>{if(o&&keys[o.w]&&o.ex)E[keys[o.w]]={pos:o.pos||'',ex:o.ex,vi:o.vi||''}});saveE();dbSave(Object.values(keys));vErr='';return true}
-catch(e){vErr=e&&e.code==='not_granted'?'bạn chưa cấp quyền tạo ví dụ':'chưa tạo được ví dụ, hãy thử lại';return false}
-finally{Object.values(keys).forEach(k=>busy.delete(k));if(curTab==='vocab'&&vview!=='quiz'&&!(document.activeElement&&document.activeElement.id==='qi'))go('vocab');else setMsg(vstat())}}
+
+/* ===== Tích hợp Gemini API với Key lưu trong localStorage ===== */
+const getApiKey = () => S.geminiKey || '';
+const setApiKey = (k) => { S.geminiKey = k.trim(); save(); };
+
+async function callGemini(promptText) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    const err = new Error("NO_KEY");
+    err.code = "NO_KEY";
+    throw err;
+  }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    })
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.error?.message || res.statusText);
+  }
+  const data = await res.json();
+  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+  return JSON.parse(rawText);
+}
+
+async function enrich(ids) {
+  if (!getApiKey()) {
+    vErr = 'chưa nhập Gemini API Key (bấm "🔑 Nhập API Key" để cài đặt)';
+    setMsg(vstat());
+    return false;
+  }
+  const L = VL(), m = mode;
+  const need = ids.filter(i => !E[ek(i)] && !busy.has(ek(i))).slice(0, 15);
+  if (!need.length) return true;
+
+  const keys = {};
+  need.forEach(i => {
+    keys[L[i][0]] = m + '|' + L[i][0];
+    busy.add(m + '|' + L[i][0]);
+  });
+  setMsg(vstat());
+
+  const items = JSON.stringify(need.map(i => ({ w: L[i][0], vi: L[i][1] })));
+  const kind = m === 'chat'
+    ? 'a short, natural everyday spoken line that uses the phrase'
+    : 'one natural business-English sentence in TOEIC style (8-15 words) that uses the word';
+
+  const prompt = `For each item return a JSON array of objects {"w": the item text exactly as given, "pos": its part of speech in the example using only n, v, adj, adv, prep, conj, phr. v, phr. or n/v, "ex": ${kind}, "vi": the Vietnamese translation of the sentence}. Return only the JSON array. Items: ${items}`;
+
+  try {
+    const r = await callGemini(prompt);
+    (Array.isArray(r) ? r : (r && r.items) || []).forEach(o => {
+      if (o && keys[o.w] && o.ex) {
+        E[keys[o.w]] = { pos: o.pos || '', ex: o.ex, vi: o.vi || '' };
+      }
+    });
+    saveE();
+    dbSave(Object.values(keys));
+    vErr = '';
+    return true;
+  } catch (e) {
+    console.error("Gemini Error:", e);
+    vErr = 'lỗi gọi Gemini API (kiểm tra lại Key hoặc mạng)';
+    return false;
+  } finally {
+    Object.values(keys).forEach(k => busy.delete(k));
+    if (curTab === 'vocab' && vview !== 'quiz' && !(document.activeElement && document.activeElement.id === 'qi')) {
+      go('vocab');
+    } else {
+      setMsg(vstat());
+    }
+  }
+}
+
 function prefetch(soft){const idx=vview==='card'?DECK():IDX();if(!idx.length)return;const ids=vview==='list'?idx.slice(0,20):[...Array(10)].map((_,j)=>idx[(vi+j)%idx.length]);if(soft&&ids.slice(0,3).every(i=>E[ek(i)]))return;enrich(ids)}
 async function genBtn(){for(let r=0;r<3;r++){const ids=IDX().filter(i=>!E[ek(i)]);if(!ids.length)break;if(!(await enrich(ids)))break}setMsg(vstat())}
 const micBlocked=()=>{try{const p=document.permissionsPolicy||document.featurePolicy;return !!(p&&p.allowsFeature&&!p.allowsFeature('microphone'))}catch(e){return false}};
@@ -549,10 +619,22 @@ show(v+`<br><span class="mut">Máy nghe được: “${esc(best.a.transcript)}�
 rc.onerror=ev=>{done=true;show('<span class="mut">'+micMsg(ev.error)+'</span>')};
 rc.onend=()=>{if(!done)show('<span class="mut">Không nghe thấy tiếng. Hãy thử lại.</span>')};
 try{rc.start()}catch(e){}}
+
+let showKeyBox = false;
 V.vocab=()=>{const L=VL(),idx=IDX(),k=S[KK()]||{};const n=Object.values(k).filter(Boolean).length;
 const cats=[...new Set(L.map(w=>w[3]))];if(vcat!=='all'&&!cats.includes(vcat))vcat='all';
+const hasKey=!!getApiKey();
 const head=`<h2>${mode==='chat'?'Cụm từ giao tiếp':'Từ vựng TOEIC'}</h2><p class="mut">${L.length} mục theo ${cats.length} chủ đề. Đã thuộc ${n}/${L.length}.</p><div class="bar"><i style="width:${n/L.length*100}%"></i></div>
-<div class="row" style="margin:12px 0"><select id="vc" class="btn" aria-label="Chủ đề"><option value="all">Tất cả (${L.length})</option>${cats.map(c=>`<option ${c===vcat?'selected':''} value="${esc(c)}">${esc(c)} (${L.filter(w=>w[3]===c).length})</option>`).join('')}</select>${[['card','Thẻ lật'],['list','Danh sách'],['quiz','Bài tập']].map(([a,t])=>`<button class="btn ${vview===a?'p':''}" data-v="${a}">${t}</button>`).join('')}<button class="btn" id="vg">✨ Tạo ví dụ & loại từ</button></div><p class="mut" id="vmsg" style="margin:0 0 10px;font-size:13px">${vstat()}</p>`;
+<div class="row" style="margin:12px 0"><select id="vc" class="btn" aria-label="Chủ đề"><option value="all">Tất cả (${L.length})</option>${cats.map(c=>`<option ${c===vcat?'selected':''} value="${esc(c)}">${esc(c)} (${L.filter(w=>w[3]===c).length})</option>`).join('')}</select>${[['card','Thẻ lật'],['list','Danh sách'],['quiz','Bài tập']].map(([a,t])=>`<button class="btn ${vview===a?'p':''}" data-v="${a}">${t}</button>`).join('')}<button class="btn" id="vg">✨ Tạo ví dụ & loại từ</button><button class="btn" id="vkeyBtn">${hasKey?'🔑 Đã có Key':'🔑 Nhập API Key'}</button></div>
+<div class="card" id="vkeyBox" ${showKeyBox?'':'hidden'} style="margin:8px 0">
+  <div class="row">
+    <input type="password" id="vkeyInp" class="btn" style="flex:1;min-width:220px" placeholder="Dán Gemini API Key (AIzaSy...) vào đây" value="${esc(getApiKey())}">
+    <button class="btn p" id="vkeySave">Lưu Key</button>
+    ${hasKey?'<button class="btn" id="vkeyDel">Xóa Key</button>':''}
+  </div>
+  <p class="mut" style="margin:6px 0 0;font-size:12px">Key chỉ lưu cục bộ trong trình duyệt máy bạn (localStorage), tuyệt đối không bị lộ lên GitHub. Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--acc)">Google AI Studio</a>.</p>
+</div>
+<p class="mut" id="vmsg" style="margin:0 0 10px;font-size:13px">${vstat()}</p>`;
 if(vview==='quiz')return head+quizView();
 if(vview==='list')return head+`<div class="card" id="vl">${idx.map(i=>lineHTML(i,k)).join('')}</div>`;
 const dk=DECK();
@@ -567,9 +649,24 @@ return head+`<label class="row mut" style="margin:0 0 8px"><input type="checkbox
 <div class="row" style="margin-top:10px"><button class="btn" id="vn">✗ Chưa thuộc</button><button class="btn p" id="vk">✓ Đã thuộc</button></div>
 <p class="mut" style="font-size:13px;margin:12px 0 8px"><b>Đã thuộc</b>: tính vào thanh tiến độ ở trên, và khi bật “Chỉ ôn từ chưa thuộc” thì từ đó biến khỏi bộ thẻ. <b>Chưa thuộc</b>: giữ từ lại để ôn tiếp. Cả hai nút đều tự chuyển sang từ kế tiếp. Có thể dùng phím ← → để đổi từ và Enter để lật thẻ.</p>
 <button class="btn" id="vr">Xóa tiến độ</button>`};
+
 I.vocab=()=>{const L=VL(),idx=IDX();document.onkeydown=null;$('#vc').onchange=e=>{vcat=e.target.value;vi=0;flip=false;Q=null;go('vocab')};
 document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{vview=b.dataset.v;go('vocab');if(vview!=='quiz')prefetch()});
 $('#vg').onclick=genBtn;
+$('#vkeyBtn').onclick=()=>{showKeyBox=!showKeyBox;go('vocab')};
+const kbSave=$('#vkeySave');if(kbSave)kbSave.onclick=()=>{
+  const val=$('#vkeyInp').value.trim();
+  setApiKey(val);
+  showKeyBox=false;
+  vErr='';
+  go('vocab');
+  if(val)prefetch();
+};
+const kbDel=$('#vkeyDel');if(kbDel)kbDel.onclick=()=>{
+  setApiKey('');
+  showKeyBox=false;
+  go('vocab');
+};
 if(vview==='quiz')return quizBind();
 if(vview==='list'){$('#vl').onclick=e=>{const a=e.target.closest('[data-w]'),b=e.target.closest('[data-e]'),m=e.target.closest('[data-m]');if(a)say(L[a.dataset.w][0]);else if(b)say(info(+b.dataset.e).ex);else if(m)recCheck(L[m.dataset.m][0],h=>{const o=$('#lr'+m.dataset.m);if(o)o.innerHTML=h})};return}
 const dk=DECK();if(!dk.length){$('#vo').onclick=()=>{vonly=false;go('vocab')};return}
