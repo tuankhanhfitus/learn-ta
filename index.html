@@ -878,7 +878,7 @@ I feel the same|mình cũng thấy vậy`);
     }
     function quizBind() {
       const L = VL(), v = $('#view');
-      if (!Q) { $('#qs').onclick = () => { startQuiz($('#qt').value, Math.min(+$('#qn').value, POOL().length)); go('vocab'); enrich(Q.qs.map(q => q.i)) }; return }
+      if (!Q) { $('#qs').onclick = () => { startQuiz($('#qt').value, Math.min(+$('#qn').value, POOL().length)); go('vocab') }; return }
       if (Q.k >= Q.qs.length) { const r = $('#qr'); if (r) r.onclick = () => { startQuiz(Q.type, 0, shuf([...new Set(Q.wrong)])); go('vocab') }; $('#qx').onclick = () => { Q = null; go('vocab') }; v.onclick = e => { const l = e.target.closest('[data-s]'); if (l) say(L[l.dataset.s][0]) }; return }
       const q = Q.qs[Q.k], w = L[q.i];
       const fin = ok => { if (ok) Q.score++; else Q.wrong.push(q.i); S[KK()] = S[KK()] || {}; S[KK()][q.i] = ok; save(); go('vocab') };
@@ -929,7 +929,7 @@ I feel the same|mình cũng thấy vậy`);
     const cardFace = (i, f, n, t) => {
       const w = VL()[i], x = info(i);
       if (!f) return `${esc(w[0])}${ipaS(i) ? `<small class="ipa">${esc(ipaS(i))}</small>` : ''}<small>${x.pos ? '(' + esc(x.pos) + ') · ' : ''}${esc(w[3])} · ${n}/${t}</small>`;
-      return `${esc(w[1])}<small>${x.pos ? '(' + esc(x.pos) + ') ' : ''}${esc(w[0])} ${esc(ipaS(i))}</small>${x.ex ? `<small>“${esc(x.ex)}”</small>${x.vi ? `<small>${esc(x.vi)}</small>` : ''}` : `<small>${busy.size ? 'Đang tạo ví dụ…' : 'Mục này chưa có ví dụ'}</small>`}`
+      return `${esc(w[1])}<small>${x.pos ? '(' + esc(x.pos) + ') ' : ''}${esc(w[0])} ${esc(ipaS(i))}</small>${x.ex ? `<small>“${esc(x.ex)}”</small>${x.vi ? `<small>${esc(x.vi)}</small>` : ''}` : `<small>${busy.size ? 'Đang tạo ví dụ…' : 'Mục này chưa có ví dụ (Bấm ✨ Tạo ví dụ ở trên)'}</small>`}`
     };
 
     /* ===== Tích hợp Gemini API (Chỉ tạo khi bấm nút ✨ Tạo ví dụ & loại từ) ===== */
@@ -1034,12 +1034,12 @@ I feel the same|mình cũng thấy vậy`);
       }
     }
 
-    // Đã vô hiệu hóa tự động gọi API ngầm
+    // Không tự động gọi API ngầm khi lật thẻ hoặc chuyển từ
     function prefetch(soft) {
       return;
     }
 
-    // Chỉ chạy khi người dùng chủ động bấm nút "✨ Tạo ví dụ & loại từ"
+    // Chỉ gọi API khi người dùng chủ động bấm nút "✨ Tạo ví dụ & loại từ"
     async function genBtn() {
       if (isCallingApi) return;
       let ids = [];
@@ -1061,8 +1061,6 @@ I feel the same|mình cũng thấy vậy`);
       setMsg(vstat());
     }
 
-    function prefetch(soft) { const idx = vview === 'card' ? DECK() : IDX(); if (!idx.length) return; const ids = vview === 'list' ? idx.slice(0, 20) : [...Array(10)].map((_, j) => idx[(vi + j) % idx.length]); if (soft && ids.slice(0, 3).every(i => E[ek(i)])) return; enrich(ids) }
-    async function genBtn() { for (let r = 0; r < 3; r++) { const ids = IDX().filter(i => !E[ek(i)]); if (!ids.length) break; if (!(await enrich(ids))) break } setMsg(vstat()) }
     const micBlocked = () => { try { const p = document.permissionsPolicy || document.featurePolicy; return !!(p && p.allowsFeature && !p.allowsFeature('microphone')) } catch (e) { return false } };
     const micMsg = er => er === 'not-allowed' || er === 'service-not-allowed' ? (micBlocked() ? '<b>Micro bị chặn bởi khung chứa trang này</b> (trang đang chạy bên trong Claude), không phải do cài đặt của bạn. Hãy dùng bản web riêng (file index.html đăng lên Netlify hoặc GitHub Pages) để ghi âm.' : '<b>Chưa có quyền micro.</b> Bấm biểu tượng ổ khóa cạnh thanh địa chỉ, chọn Micro → Cho phép, rồi tải lại trang. Nếu vẫn bị chặn, có thể trang đang nằm trong khung nhúng của Claude: hãy dùng bản web riêng.') : er === 'no-speech' ? 'Không nghe thấy tiếng. Hãy thử lại và đọc to hơn.' : 'Không ghi âm được, hãy thử lại.';
     let vres = null;
@@ -1092,7 +1090,7 @@ I feel the same|mình cũng thấy vậy`);
       const cats = [...new Set(L.map(w => w[3]))]; if (vcat !== 'all' && !cats.includes(vcat)) vcat = 'all';
       const hasKey = !!getApiKey();
       const head = `<h2>${mode === 'chat' ? 'Cụm từ giao tiếp' : 'Từ vựng TOEIC'}</h2><p class="mut">${L.length} mục theo ${cats.length} chủ đề. Đã thuộc ${n}/${L.length}.</p><div class="bar"><i style="width:${n / L.length * 100}%"></i></div>
-<div class="row" style="margin:12px 0"><select id="vc" class="btn" aria-label="Chủ đề"><option value="all">Tất cả (${L.length})</option>${cats.map(c => `<option ${c === vcat ? 'selected' : ''} value="${esc(c)}">${esc(c)} (${L.filter(w => w[3] === c).length})</option>`).join('')}</select>${[['card', 'Thẻ lật'], ['list', 'Danh sách'], ['quiz', 'Bài tập']].map(([a, t]) => `<button class="btn ${vview === a ? 'p' : ''}" data-v="${a}">${t}</button>`).join('')}<button class="btn" id="vg">✨ Tạo ví dụ & loại từ</button><button class="btn" id="vkeyBtn">${hasKey ? '🔑 Đã có Key' : '🔑 Nhập API Key'}</button></div>
+<div class="row" style="margin:12px 0"><select id="vc" class="btn" aria-label="Chủ đề"><option value="all">Tất cả (${L.length})</option>${cats.map(c => `<option ${c === vcat ? 'selected' : ''} value="${esc(c)}">${esc(c)} (${L.filter(w => w[3] === c).length})</option>`).join('')}</select>${[['card', 'Thẻ lật'], ['list', 'Danh sách'], ['quiz', 'Bài tập']].map(([a, t]) => `<button class="btn ${vview === a ? 'p' : ''}" data-v="${a}">${t}</button>`).join('')}<button class="btn" id="vg" ${isCallingApi ? 'disabled' : ''}>${isCallingApi ? '⏳ Đang tạo…' : '✨ Tạo ví dụ & loại từ'}</button><button class="btn" id="vkeyBtn">${hasKey ? '🔑 Đã có Key' : '🔑 Nhập API Key'}</button></div>
 <div class="card" id="vkeyBox" ${showKeyBox ? '' : 'hidden'} style="margin:8px 0">
   <div class="row">
     <input type="password" id="vkeyInp" class="btn" style="flex:1;min-width:220px" placeholder="Dán Gemini API Key (AIzaSy...) vào đây" value="${esc(getApiKey())}">
@@ -1119,7 +1117,7 @@ I feel the same|mình cũng thấy vậy`);
 
     I.vocab = () => {
       const L = VL(), idx = IDX(); document.onkeydown = null; $('#vc').onchange = e => { vcat = e.target.value; vi = 0; flip = false; Q = null; go('vocab') };
-      document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { vview = b.dataset.v; go('vocab'); if (vview !== 'quiz') prefetch() });
+      document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { vview = b.dataset.v; go('vocab') });
       $('#vg').onclick = genBtn;
       $('#vkeyBtn').onclick = () => { showKeyBox = !showKeyBox; go('vocab') };
       const kbSave = $('#vkeySave'); if (kbSave) kbSave.onclick = () => {
@@ -1128,7 +1126,6 @@ I feel the same|mình cũng thấy vậy`);
         showKeyBox = false;
         vErr = '';
         go('vocab');
-        if (val) prefetch();
       };
       const kbDel = $('#vkeyDel'); if (kbDel) kbDel.onclick = () => {
         setApiKey('');
@@ -1139,10 +1136,10 @@ I feel the same|mình cũng thấy vậy`);
       if (vview === 'list') { $('#vl').onclick = e => { const a = e.target.closest('[data-w]'), b = e.target.closest('[data-e]'), m = e.target.closest('[data-m]'); if (a) say(L[a.dataset.w][0]); else if (b) say(info(+b.dataset.e).ex); else if (m) recCheck(L[m.dataset.m][0], h => { const o = $('#lr' + m.dataset.m); if (o) o.innerHTML = h }) }; return }
       const dk = DECK(); if (!dk.length) { $('#vo').onclick = () => { vonly = false; go('vocab') }; return }
       const real = () => dk[vi % dk.length];
-      const step = d => { vi = ((vi % dk.length) + d + dk.length) % dk.length; flip = false; go('vocab'); prefetch(true) };
-      const mark = v => { S[KK()] = S[KK()] || {}; S[KK()][real()] = v; save(); if (vonly && v) vi = vi % dk.length; else vi = (vi + 1) % dk.length; flip = false; go('vocab'); prefetch(true) };
+      const step = d => { vi = ((vi % dk.length) + d + dk.length) % dk.length; flip = false; go('vocab') };
+      const mark = v => { S[KK()] = S[KK()] || {}; S[KK()][real()] = v; save(); if (vonly && v) vi = vi % dk.length; else vi = (vi + 1) % dk.length; flip = false; go('vocab') };
       $('#vonly').onchange = e => { vonly = e.target.checked; vi = 0; flip = false; go('vocab') };
-      $('#fc').onclick = () => { flip = !flip; go('vocab'); if (flip) prefetch() }; $('#fc').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip = !flip; go('vocab') } };
+      $('#fc').onclick = () => { flip = !flip; go('vocab') }; $('#fc').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip = !flip; go('vocab') } };
       document.onkeydown = e => { if (curTab === 'vocab' && vview === 'card' && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { if (e.key === 'ArrowRight') step(1); else if (e.key === 'ArrowLeft') step(-1) } };
       $('#vpv').onclick = () => step(-1); $('#vnx').onclick = () => step(1);
       $('#vs').onclick = () => say(L[real()][0]); $('#ve').onclick = () => { const x = info(real()).ex; if (x) say(x) };
