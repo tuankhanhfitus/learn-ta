@@ -5,7 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Eng900 – Luyện TOEIC 900 & Giao tiếp</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232B4EFF'/><rect x='10' y='52' width='80' height='36' rx='8' fill='%23FFD23F'/><text x='50' y='41' font-family='sans-serif' font-size='34' font-weight='900' fill='%23ffffff' text-anchor='middle'>ENG</text><text x='50' y='79' font-family='sans-serif' font-size='34' font-weight='900' fill='%2314213D' text-anchor='middle'>900</text></svg>">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232B4EFF'/><rect x='10' y='52' width='80' height='36' rx='8' fill='%23FFD23F'/><text x='50' y='41' font-family='sans-serif' font-size='34' font-weight='900' fill='%23ffffff' text-anchor='middle'>ENG</text><text x='50' y='79' font-family='sans-serif' font-size='34' font-weight='900' fill='%2314213D' text-anchor='middle'>900</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap"
     rel="stylesheet">
   <style>
@@ -436,6 +437,14 @@
       font-weight: 700;
       margin-top: 8px
     }
+
+    code {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 0 5px;
+      font-size: .92em
+    }
   </style>
 </head>
 
@@ -494,8 +503,8 @@
 
     /* ---------- TABS ---------- */
     const MODES = {
-      toeic: { n: "Luyện thi TOEIC", d: "Mục tiêu 900+ · Nghe, Nói, Đọc, Viết", tabs: [["plan", "Lộ trình"], ["listen", "Nghe"], ["read", "Đọc"], ["speak", "Nói"], ["write", "Viết"], ["vocab", "Từ vựng"]] },
-      chat: { n: "Tiếng Anh giao tiếp", d: "Hội thoại, mẫu câu, phản xạ nói", tabs: [["chat", "Hội thoại"], ["speak", "Luyện nói"], ["vocab", "Cụm từ"]] }
+      toeic: { n: "Luyện thi TOEIC", d: "Mục tiêu 900+ · Nghe, Nói, Đọc, Viết", tabs: [["plan", "Lộ trình"], ["gram", "Ngữ pháp"], ["listen", "Nghe"], ["read", "Đọc"], ["speak", "Nói"], ["write", "Viết"], ["vocab", "Từ vựng"]] },
+      chat: { n: "Tiếng Anh giao tiếp", d: "Hội thoại, mẫu câu, phản xạ nói", tabs: [["chat", "Hội thoại"], ["gram", "Ngữ pháp"], ["speak", "Luyện nói"], ["vocab", "Cụm từ"]] }
     };
     let mode = MODES[S.mode] ? S.mode : 'toeic';
     function drawModes() {
@@ -503,7 +512,7 @@
       $('#modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button data-m="${k}" aria-pressed="${k === mode}">${m.n}<small>${m.d}</small></button>`).join('');
       $('#tabs').innerHTML = MODES[mode].tabs.map(([k, n]) => `<button role="tab" data-k="${k}">${n}</button>`).join('')
     }
-    $('#modes').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.m !== mode) { mode = b.dataset.m; S.mode = mode; save(); vi = 0; flip = false; vcat = 'all'; Q = null; drawModes(); go(MODES[mode].tabs[0][0]) } };
+    $('#modes').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.m !== mode) { mode = b.dataset.m; S.mode = mode; save(); vi = 0; flip = false; vcat = 'all'; Q = null; gl = -1; drawModes(); go(MODES[mode].tabs[0][0]) } };
     $('#tabs').onclick = e => { const b = e.target.closest('button'); if (b) go(b.dataset.k) };
     function go(k) { const prev = curTab; curTab = k; if (hasTTS) speechSynthesis.cancel(); const v = $('#view'); v.onclick = v.onchange = v.oninput = null; document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k)); v.innerHTML = V[k](); if (prev !== k) window.scrollTo(0, 0); if (I[k]) I[k]() }
     const V = {}, I = {};
@@ -572,6 +581,499 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       const draw = () => { const c = CONV[$('#sc').value][1]; $('#dlg').className = 'card' + ($('#vi').checked ? '' : ' hide') + ($('#rp').checked ? ' blur' : ''); $('#dlg').innerHTML = c.map((l, i) => `<div class="line ${l[0] === 'B' ? 'me' : ''}" data-i="${i}"><b>${l[0]}</b><div><span class="en">${esc(l[1])}</span><span class="vi">${esc(l[2])}</span></div></div>`).join('') };
       draw();['sc', 'vi', 'rp'].forEach(id => $('#' + id).onchange = draw); $('#all').onclick = () => sayList(CONV[$('#sc').value][1].map(l => l[1]));
       $('#dlg').onclick = e => { const l = e.target.closest('.line'); if (l) say(CONV[$('#sc').value][1][l.dataset.i][1]) }
+    };
+
+    /* ---------- GRAMMAR ---------- */
+    const U = l => `<ul style="margin:6px 0 10px 18px;padding:0">${l.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    const GRAM = {
+      toeic: [
+        ["Hiện tại đơn & hiện tại hoàn thành", U(["<b>Hiện tại đơn</b>: thói quen, lịch trình (every day, usually). Chủ ngữ số ít thêm -s/-es.", "<b>Hiện tại hoàn thành</b>: have/has + V3, dùng với <i>since</i> + mốc, <i>for</i> + khoảng thời gian, <i>already, yet, just, recently</i>."]), [["The store opens at nine every day.", "Cửa hàng mở cửa lúc chín giờ mỗi ngày."], ["We have worked with this supplier since 2019.", "Chúng tôi làm việc với nhà cung cấp này từ năm 2019."]], [
+          ["The company ____ in this building since 2015.", ["is located", "has been located", "was located", "locates"], 1, "since + mốc thời gian → hiện tại hoàn thành."],
+          ["The train to Hanoi ____ at 7:30 every morning.", ["leave", "leaves", "is leaving", "has left"], 1, "Lịch trình thường ngày, chủ ngữ số ít → leaves."],
+          ["We ____ the report yet.", ["don't finish", "haven't finished", "didn't finish", "aren't finishing"], 1, "yet trong câu phủ định → hiện tại hoàn thành."],
+          ["Ms. Kim ____ for the firm for ten years.", ["works", "worked", "has worked", "is working"], 2, "for + khoảng thời gian, việc còn tiếp diễn → has worked."]]],
+        ["Quá khứ đơn & các cách nói tương lai", U(["<b>Quá khứ đơn</b>: yesterday, last week, ago → V2.", "<b>will</b>: quyết định tức thì, dự đoán. <b>be going to</b>: kế hoạch đã định. <b>Hiện tại tiếp diễn</b>: lịch hẹn cố định.", "Mệnh đề thời gian (when, as soon as, before, after) dùng hiện tại đơn, không dùng will."]), [["The director signed the contract last Friday.", "Giám đốc đã ký hợp đồng vào thứ Sáu tuần trước."], ["I will call you as soon as the meeting ends.", "Tôi sẽ gọi bạn ngay khi cuộc họp kết thúc."]], [
+          ["The director ____ the contract last Friday.", ["signs", "signed", "has signed", "will sign"], 1, "last Friday → quá khứ đơn."],
+          ["I'll call you as soon as the meeting ____.", ["will end", "ends", "ended", "would end"], 1, "Sau as soon as dùng hiện tại đơn dù nói về tương lai."],
+          ["The printer is broken. — I ____ someone to fix it right now.", ["will call", "called", "have called", "call"], 0, "Quyết định ngay lúc nói → will."],
+          ["We ____ a new branch in Da Nang next year; the board approved it.", ["open", "are going to open", "opened", "have opened"], 1, "Kế hoạch đã được duyệt → be going to."]]],
+        ["Sự hòa hợp chủ ngữ – động từ", U(["Each, every, one of + danh từ số nhiều → động từ <b>số ít</b>.", "<b>The number of</b> + N số nhiều → số ít; <b>a number of</b> + N số nhiều → số nhiều.", "Cụm xen giữa (with, as well as, together with) không làm đổi chủ ngữ chính."]), [["Each of the employees has a security badge.", "Mỗi nhân viên đều có một thẻ an ninh."], ["A number of customers have complained.", "Một số khách hàng đã phàn nàn."]], [
+          ["Each of the employees ____ a security badge.", ["have", "has", "are having", "were"], 1, "Each of + N → động từ số ít."],
+          ["The number of applicants ____ increased this year.", ["have", "has", "are", "were"], 1, "The number of → số ít."],
+          ["A number of customers ____ complained about the delay.", ["has", "have", "is", "was"], 1, "A number of → nghĩa là 'một số', dùng động từ số nhiều."],
+          ["The manager, together with his assistants, ____ attending the conference.", ["are", "were", "is", "have been"], 2, "Chủ ngữ chính là The manager → số ít."]]],
+        ["Từ loại: danh, động, tính, trạng (Part 5)", U(["<b>Tính từ</b>: đứng trước danh từ hoặc sau be/seem. <b>Trạng từ</b>: bổ nghĩa động từ, tính từ, cả câu.", "<b>Danh từ</b>: sau mạo từ, tính từ sở hữu, giới từ.", "Đuôi gợi ý: -tion/-ment/-ity (danh), -ive/-al/-ous/-ful (tính), -ly (trạng)."]), [["She completed the form carefully.", "Cô ấy điền biểu mẫu cẩn thận."], ["His expertise helped us win the account.", "Chuyên môn của anh ấy giúp chúng tôi giành được khách hàng."]], [
+          ["The company made a ____ decision to expand.", ["wise", "wisely", "wisdom", "wisen"], 0, "Cần tính từ đứng trước danh từ decision."],
+          ["Please complete the form ____.", ["careful", "carefully", "care", "cared"], 1, "Cần trạng từ bổ nghĩa cho động từ complete."],
+          ["Her ____ in marketing helped the team win the account.", ["expert", "expertly", "expertise", "experts"], 2, "Sau tính từ sở hữu her cần danh từ."],
+          ["The new policy is highly ____ for small businesses.", ["benefit", "beneficial", "beneficially", "benefiting"], 1, "Sau trạng từ highly và động từ is → tính từ."]]],
+        ["Giới từ chỉ thời gian", U(["<b>in</b> + tháng, năm, mùa · <b>on</b> + ngày · <b>at</b> + giờ.", "<b>by</b> = muộn nhất vào lúc đó · <b>until</b> = kéo dài đến lúc đó · <b>within</b> = trong vòng.", "<b>for</b> + khoảng thời gian · <b>during</b> + danh từ chỉ sự kiện · <b>since</b> + mốc."]), [["The conference will be held on May 12.", "Hội nghị sẽ được tổ chức vào ngày 12 tháng 5."], ["The package will arrive within three business days.", "Gói hàng sẽ đến trong vòng ba ngày làm việc."]], [
+          ["The conference will be held ____ May 12.", ["in", "on", "at", "by"], 1, "on + ngày cụ thể."],
+          ["Please submit the form ____ Friday at the latest.", ["until", "by", "during", "since"], 1, "by + hạn chót."],
+          ["The store will be closed ____ the renovation.", ["for", "during", "while", "since"], 1, "during + danh từ (the renovation)."],
+          ["The package will arrive ____ three business days.", ["within", "during", "since", "until"], 0, "within + khoảng thời gian = trong vòng."]]],
+        ["Liên từ & giới từ chỉ nhượng bộ, nguyên nhân", U(["<b>Although / Even though</b> + mệnh đề; <b>Despite / In spite of</b> + danh từ hoặc V-ing.", "<b>Because</b> + mệnh đề; <b>because of / due to</b> + danh từ.", "Cặp liên từ: both…and, either…or, neither…nor, not only…but also."]), [["Despite the delay, the project was completed on time.", "Dù bị chậm, dự án vẫn hoàn thành đúng hạn."], ["Although it rained, the event continued.", "Dù trời mưa, sự kiện vẫn tiếp tục."]], [
+          ["____ the delay, the project was completed on time.", ["Although", "Despite", "Because", "Unless"], 1, "Sau chỗ trống là danh từ (the delay) → Despite."],
+          ["____ it rained heavily, the event continued.", ["Despite", "Although", "Due to", "In spite of"], 1, "Sau chỗ trống là mệnh đề → Although."],
+          ["The flight was cancelled ____ the storm.", ["because", "because of", "although", "so"], 1, "because of + danh từ."],
+          ["You can ____ pay by card or by cash.", ["both", "either", "neither", "whether"], 1, "either … or …"]]],
+        ["Câu điều kiện", U(["<b>Loại 1</b> (có thể xảy ra): If + hiện tại đơn, will + V.", "<b>Loại 2</b> (không có thật ở hiện tại): If + quá khứ đơn, would + V.", "<b>Loại 3</b> (không có thật ở quá khứ): If + had + V3, would have + V3.", "Đảo ngữ: <i>Should you need…</i> (loại 1), <i>Had we known…</i> (loại 3)."]), [["If we miss the deadline, we will lose the client.", "Nếu trễ hạn, chúng ta sẽ mất khách hàng."], ["Should you need help, please contact us.", "Nếu bạn cần hỗ trợ, xin hãy liên hệ chúng tôi."]], [
+          ["If we ____ the deadline, we will lose the client.", ["miss", "missed", "will miss", "would miss"], 0, "Loại 1: If + hiện tại đơn."],
+          ["If I ____ more time, I would attend the seminar.", ["have", "had", "will have", "would have"], 1, "Loại 2: If + quá khứ đơn."],
+          ["If the team ____ harder, they would have finished earlier.", ["worked", "had worked", "works", "would work"], 1, "Loại 3: If + had + V3."],
+          ["____ you need further assistance, please contact us.", ["Would", "Should", "Did", "Were"], 1, "Đảo ngữ của If you should need…"]]],
+        ["Mệnh đề quan hệ", U(["<b>who</b> (người, chủ ngữ), <b>whom</b> (người, tân ngữ), <b>which</b> (vật), <b>whose</b> (sở hữu).", "<b>that</b> thay who/which nhưng không dùng sau dấu phẩy.", "Rút gọn: V-ing (chủ động), V3 (bị động)."]), [["The candidate whose résumé impressed us was hired.", "Ứng viên có hồ sơ gây ấn tượng với chúng tôi đã được tuyển."], ["The products manufactured here are exported worldwide.", "Các sản phẩm được sản xuất tại đây được xuất khẩu toàn cầu."]], [
+          ["The candidate ____ résumé impressed us was hired.", ["who", "whom", "whose", "which"], 2, "whose + danh từ → chỉ sự sở hữu."],
+          ["The report ____ you sent yesterday is very useful.", ["who", "which", "whose", "where"], 1, "Chỉ vật, làm tân ngữ → which."],
+          ["Employees ____ want to attend the workshop should register.", ["who", "whom", "whose", "which"], 0, "Chỉ người, làm chủ ngữ → who."],
+          ["The products ____ in this factory are exported worldwide.", ["manufacturing", "manufactured", "manufacture", "to manufacture"], 1, "Rút gọn bị động → V3."]]],
+        ["Bị động & phân từ", U(["<b>Bị động</b>: be + V3 (will be sent, has been approved…).", "Cấu trúc hay gặp: be scheduled to, be required to, be expected to.", "Phân từ làm tính từ: <b>V-ing</b> (gây ra cảm xúc: interesting), <b>V3</b> (cảm nhận: interested)."]), [["The meeting is scheduled to start at 10 A.M.", "Cuộc họp dự kiến bắt đầu lúc 10 giờ sáng."], ["The manager was satisfied with the work.", "Quản lý hài lòng với công việc."]], [
+          ["The meeting ____ to start at 10 A.M.", ["schedules", "is scheduled", "scheduling", "has scheduled"], 1, "be scheduled to + V."],
+          ["All invoices must ____ before the end of the month.", ["pay", "be paid", "paying", "paid"], 1, "must + be + V3 (bị động)."],
+          ["The ____ results surprised the investors.", ["disappoint", "disappointing", "disappointed", "disappointment"], 1, "Kết quả gây thất vọng → V-ing."],
+          ["The manager was ____ with the quality of the work.", ["satisfy", "satisfying", "satisfied", "satisfaction"], 2, "Người cảm thấy hài lòng → V3."]]],
+        ["So sánh & lượng từ", U(["So sánh hơn: <i>more + tính từ dài</i> / <i>tính từ ngắn + -er</i> + than. So sánh nhất: the most / the -est.", "Tăng cường so sánh hơn: much, far, even, a lot (không dùng very).", "<b>many/few/fewer</b> + đếm được số nhiều; <b>much/little/less</b> + không đếm được."]), [["This model is more efficient than the previous one.", "Mẫu này hiệu quả hơn mẫu trước."], ["There is not much time left.", "Không còn nhiều thời gian."]], [
+          ["This model is ____ than the previous one.", ["more efficient", "most efficient", "efficienter", "as efficient"], 0, "Có than → so sánh hơn."],
+          ["She is ____ experienced engineer in our department.", ["more", "the most", "most", "much"], 1, "Trong cả phòng → so sánh nhất: the most."],
+          ["We have received ____ complaints this month than last month.", ["fewer", "less", "little", "much"], 0, "complaints đếm được → fewer."],
+          ["There is not ____ time left before the deadline.", ["many", "much", "few", "a number of"], 1, "time không đếm được → much."]]]
+      ],
+      chat: [
+        ["Câu hỏi thông dụng", U(["<b>Do/Does/Did</b> + chủ ngữ + V: hỏi thói quen, sự việc đã xảy ra.", "<b>Wh-</b>: What (gì), Where (đâu), When (khi nào), Who (ai), Why (vì sao), How (thế nào)."]), [["Where do you work?", "Bạn làm việc ở đâu?"], ["Did you go to the party last night?", "Tối qua bạn có đi dự tiệc không?"]], [
+          ["____ does the bus leave? — At 6 o'clock.", ["Where", "When", "Who", "Why"], 1, "Trả lời bằng giờ → When."],
+          ["____ she live near here?", ["Do", "Does", "Is", "Are"], 1, "Chủ ngữ she → Does."],
+          ["____ you go to the party last night?", ["Do", "Did", "Were", "Have"], 1, "last night → quá khứ → Did."]]],
+        ["Nhờ vả & xin phép lịch sự", U(["Nhờ: <b>Could/Can/Would you…?</b> (Could lịch sự hơn Can).", "Xin phép: <b>May/Could/Can I…?</b>", "Yêu cầu lịch sự: <b>I'd like…</b> (= I would like)."]), [["Could you pass me the salt, please?", "Bạn đưa giúp tôi lọ muối được không?"], ["May I use your phone?", "Tôi dùng điện thoại của bạn được không?"]], [
+          ["____ you pass me the salt, please?", ["Could", "Did", "Are", "Have"], 0, "Lời nhờ vả lịch sự → Could you…?"],
+          ["____ I use your phone?", ["Do", "May", "Would", "Will"], 1, "Xin phép → May I…?"],
+          ["I ____ like a cup of tea, please.", ["will", "would", "do", "am"], 1, "I would like = I'd like."]]],
+        ["Thì hiện tại khi nói chuyện", U(["<b>Hiện tại đơn</b>: thói quen, sự thật (I usually go…).", "<b>Hiện tại tiếp diễn</b>: đang xảy ra lúc nói (I'm cooking).", "<b>Hiện tại hoàn thành</b>: kinh nghiệm, việc kéo dài đến nay (I have learned… for three years)."]), [["I'm cooking dinner right now.", "Tôi đang nấu bữa tối."], ["She has learned English for three years.", "Cô ấy học tiếng Anh được ba năm."]], [
+          ["Sorry, I can't talk now. I ____ dinner.", ["cook", "am cooking", "cooked", "cooks"], 1, "Đang xảy ra → hiện tại tiếp diễn."],
+          ["I usually ____ to work by bus.", ["go", "am going", "went", "going"], 0, "usually → hiện tại đơn."],
+          ["She ____ English for three years.", ["learns", "has learned", "learned", "is learn"], 1, "for three years → hiện tại hoàn thành."]]],
+        ["Nói về kế hoạch & kinh nghiệm", U(["<b>be going to</b>: kế hoạch đã có.", "<b>will</b>: quyết định ngay lúc nói, lời hứa.", "<b>Have you ever + V3?</b> hỏi kinh nghiệm."]), [["I'm going to visit my parents this weekend.", "Cuối tuần này tôi định về thăm bố mẹ."], ["Have you ever eaten sushi?", "Bạn đã từng ăn sushi chưa?"]], [
+          ["Do you have plans? — Yes, I ____ visit my parents this weekend.", ["will", "am going to", "visit", "visited"], 1, "Kế hoạch đã có → be going to."],
+          ["It's cold. I ____ close the window.", ["will", "am going to", "close", "closed"], 0, "Quyết định ngay lúc nói → will."],
+          ["Have you ____ sushi before?", ["eat", "ate", "eaten", "eating"], 2, "Have + V3 (eaten)."]]],
+        ["Giới từ thường gặp", U(["<b>Tính từ + giới từ</b>: interested in, good at, afraid of, tired of.", "<b>Thời gian</b>: on Monday, in May, at 7 o'clock.", "<b>Nơi chốn</b>: in a city, at the station, on the street."]), [["I'm interested in photography.", "Tôi quan tâm đến nhiếp ảnh."], ["See you on Monday!", "Hẹn gặp bạn vào thứ Hai!"]], [
+          ["I'm interested ____ photography.", ["on", "in", "at", "for"], 1, "interested in."],
+          ["She is good ____ cooking.", ["at", "in", "on", "with"], 0, "good at."],
+          ["See you ____ Monday.", ["in", "on", "at", "by"], 1, "on + thứ trong tuần."]]]
+      ]
+    };
+    GRAM.toeic.push(
+      ["Mạo từ a / an / the", U(["<b>a/an</b>: danh từ đếm được số ít, nhắc lần đầu (an trước <i>âm</i> nguyên âm).", "<b>the</b>: đã xác định, duy nhất, hoặc so sánh nhất (the most…).", "<b>Không mạo từ</b>: danh từ số nhiều hoặc không đếm được nói chung (staff, equipment, information)."]), [["We hired an engineer last month.", "Tháng trước chúng tôi đã thuê một kỹ sư."], ["The report you requested is attached.", "Bản báo cáo bạn yêu cầu được đính kèm."]], [
+        ["She works as ____ accountant at a bank.", ["a", "an", "the", "—"], 1, "accountant bắt đầu bằng âm nguyên âm → an."],
+        ["____ equipment in the lab is very expensive.", ["A", "An", "The", "—"], 2, "Thiết bị cụ thể trong phòng lab → the."],
+        ["He is ____ most experienced manager here.", ["a", "an", "the", "—"], 2, "So sánh nhất luôn có the."],
+        ["We need to hire ____ new staff.", ["a", "an", "the", "—"], 3, "staff là danh từ không đếm được, nói chung → không mạo từ."]]],
+      ["Danh động từ (V-ing) & động từ nguyên mẫu (to V)", U(["<b>V-ing</b> sau: enjoy, avoid, consider, suggest, finish, postpone, mind; sau giới từ; look forward to + V-ing.", "<b>to V</b> sau: decide, plan, hope, agree, refuse, want, need, afford, expect.", "<i>stop/remember/forget</i> + V-ing (việc đã làm) khác + to V (việc sắp làm)."]), [["We are considering opening a new office.", "Chúng tôi đang cân nhắc mở một văn phòng mới."], ["The company decided to cut costs.", "Công ty quyết định cắt giảm chi phí."]], [
+        ["The manager suggested ____ the meeting until Monday.", ["to postpone", "postponing", "postpone", "postponed"], 1, "suggest + V-ing."],
+        ["We can't afford ____ any more staff.", ["hiring", "to hire", "hire", "hired"], 1, "afford + to V."],
+        ["I look forward to ____ from you soon.", ["hear", "hearing", "heard", "to hear"], 1, "look forward to (to là giới từ) + V-ing."],
+        ["She is responsible for ____ new employees.", ["train", "to train", "training", "trained"], 2, "Sau giới từ for → V-ing."]]],
+      ["Thì hoàn thành & tiếp diễn nâng cao", U(["<b>Quá khứ hoàn thành</b>: had + V3 — việc xảy ra trước một mốc/việc khác trong quá khứ.", "<b>Tương lai hoàn thành</b>: will have + V3 — hoàn tất trước mốc tương lai (by + mốc).", "<b>Hiện tại hoàn thành tiếp diễn</b>: have been + V-ing — nhấn mạnh quá trình kéo dài đến nay.", "<b>Quá khứ tiếp diễn</b>: was/were + V-ing — đang diễn ra thì có việc khác chen vào."]), [["By the time we arrived, the meeting had started.", "Lúc chúng tôi đến, cuộc họp đã bắt đầu."], ["By next June, she will have worked here for ten years.", "Đến tháng Sáu tới, cô ấy sẽ làm ở đây được mười năm."]], [
+        ["By the time the CEO arrived, the presentation ____.", ["already started", "had already started", "has already started", "will already start"], 1, "Xảy ra trước một mốc quá khứ → quá khứ hoàn thành."],
+        ["By next year, we ____ the new system.", ["will install", "will have installed", "have installed", "installed"], 1, "by next year → tương lai hoàn thành."],
+        ["I ____ on this project since January.", ["work", "am working", "have been working", "worked"], 2, "since + mốc, nhấn mạnh quá trình → hiện tại hoàn thành tiếp diễn."],
+        ["The phone rang while I ____ a report.", ["wrote", "was writing", "have written", "write"], 1, "Đang làm thì có việc chen vào → quá khứ tiếp diễn."]]],
+      ["Động từ khuyết thiếu (modals)", U(["<b>must</b> (bắt buộc / suy luận chắc chắn), <b>have to</b> (bắt buộc từ bên ngoài), <b>should</b> (lời khuyên).", "<b>may/might</b> (có thể xảy ra), <b>can/could</b> (khả năng, xin phép).", "Sau modal là V nguyên mẫu. <b>Modal + have + V3</b>: suy đoán/phê phán quá khứ (should have called)."]), [["All visitors must wear a badge.", "Tất cả khách tham quan phải đeo thẻ."], ["You should have called us earlier.", "Lẽ ra bạn nên gọi cho chúng tôi sớm hơn."]], [
+        ["Employees ____ wear safety helmets on the construction site.", ["must", "may", "can", "would"], 0, "Quy định bắt buộc → must."],
+        ["The shipment ____ arrive by Friday, but it depends on the weather.", ["might", "has to", "must have", "did"], 0, "Khả năng chưa chắc chắn → might."],
+        ["You ____ have told me about the delay earlier.", ["should", "shall", "may", "will"], 0, "should have + V3 = lẽ ra nên."],
+        ["The lights are on, so someone ____ still be in the office.", ["must", "should have", "can't", "shall"], 0, "Suy luận chắc chắn → must."]]],
+      ["Đại từ: nhân xưng, sở hữu, phản thân", U(["Chủ ngữ: I, he, we, they · Tân ngữ: me, him, us, them · Tính từ sở hữu (+ N): my, his, our, their.", "Đại từ sở hữu (không + N): mine, his, ours, theirs.", "Phản thân: myself, himself, themselves… (chủ ngữ = tân ngữ, hoặc nhấn mạnh). <b>each other</b> = lẫn nhau."]), [["The manager introduced himself to the clients.", "Quản lý tự giới thiệu với các khách hàng."], ["The two teams help each other.", "Hai nhóm giúp đỡ lẫn nhau."]], [
+        ["The CEO personally welcomed the guests ____.", ["him", "himself", "his", "he"], 1, "Nhấn mạnh chính người đó → himself."],
+        ["Please send ____ the updated contract by email.", ["we", "us", "our", "ourselves"], 1, "Sau động từ cần tân ngữ → us."],
+        ["This laptop is not ____; it belongs to the company.", ["my", "mine", "me", "myself"], 1, "Không có danh từ theo sau → đại từ sở hữu mine."],
+        ["The two departments share information with ____.", ["themselves", "each other", "other", "others"], 1, "Hai bên với nhau → each other."]]],
+      ["Câu giả định (subjunctive)", U(["<b>suggest, recommend, require, insist, demand, request</b> + (that) + S + <b>V nguyên mẫu</b> (không chia).", "<b>It is important/essential/vital that</b> + S + V nguyên mẫu (bị động: be + V3).", "<b>wish</b> + S + V2 / were (ước điều không có thật ở hiện tại)."]), [["The manager recommended that he attend the training.", "Quản lý đề nghị anh ấy tham gia khóa đào tạo."], ["It is essential that every employee be on time.", "Mỗi nhân viên nhất thiết phải đúng giờ."]], [
+        ["The board requires that all reports ____ submitted by noon.", ["are", "be", "were", "is"], 1, "require that + S + be + V3."],
+        ["She suggested that we ____ the deadline.", ["extend", "extends", "extended", "extending"], 0, "suggest that + S + V nguyên mẫu."],
+        ["It is vital that he ____ the contract before Friday.", ["signs", "sign", "signed", "will sign"], 1, "It is vital that + S + V nguyên mẫu."],
+        ["I wish I ____ more time to prepare.", ["have", "had", "will have", "would have"], 1, "wish + quá khứ đơn (hiện tại không có thật)."]]],
+      ["Câu tường thuật (gián tiếp)", U(["<b>Lùi thì</b>: hiện tại đơn → quá khứ đơn; will → would; can → could; quá khứ đơn → quá khứ hoàn thành.", "Đổi trạng từ: tomorrow → the next day, today → that day, here → there.", "Câu hỏi: ask + <b>if/whether/wh-</b> + S + V (không đảo). Mệnh lệnh: <b>tell/ask + O + (not) to V</b>."]), [["She said that she would send the file.", "Cô ấy nói rằng cô ấy sẽ gửi tệp."], ["He asked me whether I had finished the report.", "Anh ấy hỏi tôi đã làm xong báo cáo chưa."]], [
+        ["He said, “I will call you tomorrow.” → He said that he ____ me the next day.", ["will call", "would call", "has called", "calls"], 1, "will → would khi lùi thì."],
+        ["She asked, “Where is the meeting room?” → She asked where ____.", ["is the meeting room", "the meeting room was", "was the meeting room", "did the meeting room be"], 1, "Câu hỏi gián tiếp: không đảo, lùi thì → was."],
+        ["“Please submit your forms,” the manager said. → The manager told us ____ our forms.", ["submit", "to submit", "submitting", "that submit"], 1, "tell + O + to V."],
+        ["“Have you finished the report?” he asked me. → He asked me ____ I had finished the report.", ["that", "if", "what", "to"], 1, "Câu hỏi Yes/No → if/whether."]]],
+      ["Từ nối & liên kết ý (Part 6)", U(["<b>Đối lập</b>: however, nevertheless, on the other hand.", "<b>Kết quả</b>: therefore, as a result, consequently. <b>Bổ sung</b>: moreover, furthermore, in addition.", "<b>Ví dụ</b>: for example, for instance. <b>Nếu không</b>: otherwise.", "Từ nối đứng đầu câu thường theo sau là dấu phẩy; đứng giữa hai mệnh đề cần dấu chấm phẩy trước."]), [["The product is expensive; however, it is very durable.", "Sản phẩm đắt; tuy nhiên rất bền."], ["We lost the contract. As a result, we cut costs.", "Chúng tôi mất hợp đồng. Do đó chúng tôi cắt giảm chi phí."]], [
+        ["The price has increased. ____, many customers still prefer our brand.", ["Therefore", "However", "Moreover", "For example"], 1, "Hai ý đối lập → However."],
+        ["The server crashed. ____, we could not process any orders.", ["As a result", "In contrast", "Nevertheless", "Otherwise"], 0, "Quan hệ kết quả → As a result."],
+        ["The software is easy to use. ____, it is very affordable.", ["However", "Furthermore", "Instead", "Otherwise"], 1, "Thêm một ý cùng chiều → Furthermore."],
+        ["Please confirm by Friday. ____, we will give your seat to someone else.", ["Otherwise", "Moreover", "Meanwhile", "For instance"], 0, "Nếu không làm vậy thì… → Otherwise."]]],
+      ["Danh từ đếm được, không đếm được & sở hữu cách", U(["<b>Không đếm được</b>: information, advice, equipment, furniture, luggage, news, staff, feedback, research, progress → không thêm -s, không a/an; dùng much/little, a piece of.", "<b>Sở hữu</b>: 's cho người (the manager's office), of cho vật (the end of the month).", "Danh từ ghép: customer service, sales figures (danh từ đầu thường ở dạng số ít)."]), [["We received useful feedback from customers.", "Chúng tôi nhận được phản hồi hữu ích từ khách hàng."], ["Could you give me some information?", "Bạn cho tôi một ít thông tin được không?"]], [
+        ["Could you give me some ____ about the new policy?", ["informations", "information", "an information", "a information"], 1, "information là danh từ không đếm được."],
+        ["The company bought new ____ for the office.", ["equipments", "equipment", "an equipment", "equipmentes"], 1, "equipment không đếm được, không thêm -s."],
+        ["We have received a lot of positive ____.", ["feedbacks", "feedback", "a feedback", "feedbackes"], 1, "feedback không đếm được."],
+        ["Please contact the ____ office.", ["manager's", "managers", "manager", "manager of"], 0, "Sở hữu của người → manager's."]]]
+    );
+    GRAM.chat.push(
+      ["Kể chuyện quá khứ (used to, quá khứ tiếp diễn)", U(["<b>Quá khứ đơn</b>: việc đã xong (I met…).", "<b>Quá khứ tiếp diễn</b>: đang xảy ra thì có việc khác chen vào (While I was walking, it started to rain).", "<b>used to + V</b>: thói quen trong quá khứ nay không còn."]), [["I used to play football every weekend.", "Trước đây tôi hay chơi bóng đá mỗi cuối tuần."], ["While I was walking, it started to rain.", "Đang đi bộ thì trời bắt đầu mưa."]], [
+        ["I ____ to live in Hue when I was a child.", ["use", "used", "am used", "using"], 1, "used to + V: thói quen quá khứ."],
+        ["While we ____ lunch, the phone rang.", ["have", "were having", "had", "are having"], 1, "Đang làm thì có việc chen vào → quá khứ tiếp diễn."],
+        ["Yesterday I ____ my old friend at the mall.", ["meet", "met", "have met", "meeting"], 1, "Yesterday → quá khứ đơn."]]],
+      ["should / must / have to", U(["<b>should</b>: lời khuyên. <b>must</b>: bắt buộc mạnh. <b>have to</b>: quy định bên ngoài.", "<b>mustn't</b>: cấm. <b>don't have to</b>: không cần thiết.", "<b>could / might</b>: khả năng."]), [["You should drink more water.", "Bạn nên uống nhiều nước hơn."], ["You don't have to come early.", "Bạn không cần đến sớm."]], [
+        ["You look tired. You ____ get some rest.", ["should", "can't", "mustn't", "did"], 0, "Lời khuyên → should."],
+        ["You ____ park here. It's forbidden.", ["don't have to", "mustn't", "shouldn't to", "haven't"], 1, "mustn't = cấm."],
+        ["It's Sunday, so I ____ go to work.", ["don't have to", "mustn't", "can't to", "shouldn't to"], 0, "don't have to = không cần thiết."]]],
+      ["So sánh trong giao tiếp", U(["<b>Hơn</b>: tính từ ngắn + -er / more + tính từ dài + than.", "<b>Nhất</b>: the + -est / the most + tính từ dài.", "<b>Bằng</b>: as + tính từ + as. Bất quy tắc: good → better → best; bad → worse → worst."]), [["This café is cheaper than that one.", "Quán cà phê này rẻ hơn quán kia."], ["He is as tall as his brother.", "Anh ấy cao bằng anh trai."]], [
+        ["This phone is ____ than my old one.", ["good", "better", "best", "more good"], 1, "good → better."],
+        ["She is the ____ student in the class.", ["smart", "smarter", "smartest", "most smarter"], 2, "Nhất lớp → the + smartest."],
+        ["My room is not as big ____ yours.", ["than", "as", "like", "that"], 1, "as … as."]]],
+      ["Điều kiện đời thường & lời khuyên", U(["<b>If + hiện tại đơn, will + V</b>: khả năng có thật.", "<b>If I were you, I would…</b>: đưa lời khuyên.", "<b>I wish + quá khứ đơn</b>: ước điều không có thật ở hiện tại. <b>Unless</b> = if … not."]), [["If it rains, we will stay at home.", "Nếu trời mưa, chúng ta sẽ ở nhà."], ["If I were you, I would take the job.", "Nếu tôi là bạn, tôi sẽ nhận công việc đó."]], [
+        ["If it ____ tomorrow, we will cancel the picnic.", ["rains", "will rain", "rained", "rain"], 0, "Mệnh đề if dùng hiện tại đơn."],
+        ["If I ____ you, I would talk to him.", ["am", "were", "will be", "have been"], 1, "If I were you…"],
+        ["I wish I ____ speak French.", ["can", "could", "will", "would"], 1, "wish + quá khứ (could)."]]],
+      ["Lượng từ & danh từ đếm được", U(["<b>some</b> (khẳng định), <b>any</b> (phủ định, nghi vấn).", "<b>many/few</b> + đếm được; <b>much/little</b> + không đếm được; <b>a lot of</b> dùng được cho cả hai.", "Không đếm được: water, money, time, advice, information."]), [["Do you have any questions?", "Bạn có câu hỏi nào không?"], ["I don't have much time.", "Tôi không có nhiều thời gian."]], [
+        ["I don't have ____ money with me.", ["many", "much", "few", "a few"], 1, "money không đếm được → much."],
+        ["Would you like ____ coffee?", ["some", "any", "many", "a few"], 0, "Lời mời lịch sự dùng some."],
+        ["There aren't ____ chairs in the room.", ["much", "any", "a little", "little"], 1, "Phủ định + đếm được → any."]]]
+    );
+    /* ---- Định dạng chung: 📌 Công thức & Quy tắc + 💡 Mẹo làm bài ---- */
+    const HDR = '<p style="margin:0"><b>📌 Công thức & Quy tắc trọng tâm:</b></p>';
+    const T = (intro, rules, tip, label) => `${intro ? `<p class="mut" style="margin:0 0 6px">${intro}</p>` : ''}${HDR}${U(rules)}<div class="exp" style="margin-top:8px">💡 <b>${label || 'Mẹo làm bài'}:</b> ${tip}</div>`;
+    const tip = (i, text, label) => { GRAM.toeic[i][1] += `<div class="exp" style="margin-top:8px">💡 <b>${label || 'Mẹo làm bài'}:</b> ${text}</div>` };
+    Object.values(GRAM).forEach(L => L.forEach(g => { g[1] = HDR + g[1] }));
+
+    // Bài 1: Các Thì & Phối thì (viết lại theo nội dung chuẩn TOEIC)
+    GRAM.toeic[0][0] = "Các Thì & Phối thì trọng tâm TOEIC";
+    GRAM.toeic[0][1] = T("Tập trung vào Hiện tại hoàn thành, Quá khứ đơn, Tương lai hoàn thành và quy tắc phối thì với mệnh đề thời gian.", [
+      "<b>Hiện tại hoàn thành</b> (have/has + V3/ed): đi với <i>since</i> + mốc quá khứ, <i>for</i> + khoảng thời gian, <i>recently, lately, so far, over the past/last</i> + số năm.",
+      "<b>Tương lai hoàn thành</b> (will have + V3/ed): đi với <i>by</i> + mốc thời gian tương lai hoặc <i>by the time + S + V (hiện tại đơn)</i>.",
+      "<b>Mệnh đề thời gian tương lai</b>: sau <i>when, as soon as, before, after, until, once, by the time</i> → tuyệt đối không dùng will, lùi về hiện tại đơn (hoặc hiện tại hoàn thành); vế chính dùng tương lai đơn."
+    ], "Thấy <code>over the past 5 years</code> chọn ngay have/has + V3/ed. Thấy <code>by the time + hiện tại đơn</code> chọn ngay will have + V3/ed.", "Dấu hiệu vàng");
+    GRAM.toeic[0][2] = [["Sales have risen steadily over the past five years.", "Doanh số đã tăng đều đặn trong năm năm qua."], ["By the time the auditors arrive, we will have finished the reports.", "Trước khi kiểm toán viên đến, chúng tôi sẽ hoàn thành các báo cáo."], ["We will start the meeting as soon as everyone arrives.", "Chúng ta sẽ bắt đầu họp ngay khi mọi người đến."]];
+    GRAM.toeic[0][3].push(
+      ["Sales have grown steadily ____ the past five years.", ["over", "at", "on", "from"], 0, "over the past + số năm → hiện tại hoàn thành."],
+      ["By the time the auditors arrive, we ____ all the reports.", ["will finish", "will have finished", "have finished", "finished"], 1, "by the time + hiện tại đơn → will have + V3."],
+      ["We will begin the training as soon as the new software ____ installed.", ["will be", "would be", "was", "is"], 3, "Sau as soon as dùng hiện tại đơn, không dùng will."],
+      ["Sales ____ strongly so far this quarter.", ["grow", "grew", "have grown", "will grow"], 2, "so far → hiện tại hoàn thành."]);
+
+    // Bài 3: Hòa hợp Chủ ngữ – Động từ
+    GRAM.toeic[2][0] = "Hòa hợp Chủ ngữ – Động từ (Subject–Verb Agreement)";
+    GRAM.toeic[2][1] = T("Xác định đúng chủ ngữ chính (số ít hay số nhiều) khi bị ngăn cách bởi các cụm giới từ hoặc mệnh đề phụ.", [
+      "<b>Quy tắc cốt lõi</b>: <i>N1 + giới từ (of, in, with, from, at…) + N2 + V</i> → động từ luôn chia theo N1, bỏ qua cụm giới từ ở giữa.",
+      "<b>The number of</b> + N số nhiều + V số ít (số lượng…). Ngược lại <b>A number of</b> + N số nhiều + V số nhiều (nhiều…).",
+      "<b>Each / Every / Anyone / Everyone / Someone / Nothing</b> + V số ít.",
+      "<b>Either A or B / Neither A nor B / Not only A but also B</b> → chia động từ theo chủ ngữ đứng gần động từ nhất (B)."
+    ], "Gạch bỏ ngay các cụm bắt đầu bằng <i>of, in, along with, together with, as well as, accompanied by</i> trước động từ để nhìn thấy chủ ngữ thật sự.", "Mẹo làm bài 5 giây");
+    GRAM.toeic[2][2].push(["The price of these products has increased.", "Giá của các sản phẩm này đã tăng."]);
+    GRAM.toeic[2][3].push(
+      ["The list of new products ____ on the manager's desk.", ["is", "are", "were", "have"], 0, "Chủ ngữ chính là list (số ít), bỏ qua of new products."],
+      ["Neither the manager nor the employees ____ aware of the change.", ["is", "are", "was", "has been"], 1, "Neither…nor: chia theo employees (gần động từ nhất) → are."],
+      ["Not only the supervisor but also the interns ____ invited to the event.", ["was", "is", "were", "has"], 2, "Chia theo the interns (số nhiều) → were."],
+      ["Everyone in the sales team ____ required to attend the workshop.", ["are", "is", "were", "have been"], 1, "Everyone + V số ít."]);
+
+    // Mẹo làm bài cho các bài còn lại
+    tip(1, "Thấy <i>yesterday, ago, last + thời gian</i> → quá khứ đơn. Thấy <i>tomorrow, next</i> → will hoặc be going to.", "Dấu hiệu vàng");
+    tip(3, "Nhìn từ ngay trước và sau chỗ trống: sau mạo từ/tính từ sở hữu cần <b>danh từ</b>, trước danh từ cần <b>tính từ</b>, bổ nghĩa cho động từ cần <b>trạng từ</b>.");
+    tip(4, "Hạn chót → <b>by</b>; kéo dài đến lúc đó → <b>until</b>; theo sau là sự kiện → <b>during</b>; khoảng thời gian → <b>for/within</b>.", "Dấu hiệu vàng");
+    tip(5, "Sau chỗ trống là mệnh đề (S + V) → <b>liên từ</b>; là cụm danh từ hoặc V-ing → <b>giới từ</b>.");
+    tip(6, "Vế sau có <i>would have + V3</i> → vế if dùng <i>had + V3</i>. Câu bắt đầu bằng <i>Should / Had / Were + S</i> → đảo ngữ của if.", "Dấu hiệu vàng");
+    tip(7, "Sau chỗ trống là <b>danh từ</b> (không phải động từ) → <b>whose</b>. Sau dấu phẩy không dùng <b>that</b>.");
+    tip(8, "Sau chỗ trống không có tân ngữ, hoặc có <i>by + tác nhân</i> → <b>bị động</b>. Người cảm thấy → V3; vật gây ra cảm xúc → V-ing.");
+    tip(9, "Thấy <i>than</i> → so sánh hơn. Thấy <i>in / of the…</i> → so sánh nhất. <i>much, far, even</i> đứng trước so sánh hơn, không dùng <i>very</i>.", "Dấu hiệu vàng");
+    tip(10, "Danh từ đếm được số ít luôn cần <b>a/an/the</b>; danh từ không đếm được không dùng a/an.");
+    tip(11, "Sau giới từ (kể cả <i>to</i> trong look forward to, be committed to) → <b>V-ing</b>. Sau decide, plan, afford, agree → <b>to V</b>.");
+    tip(12, "<i>By the time + quá khứ đơn</i> → vế chính <i>had + V3</i>. <i>By + mốc tương lai</i> → <i>will have + V3</i>.", "Dấu hiệu vàng");
+    tip(13, "Sau modal luôn là <b>V nguyên mẫu</b>. <i>should/must/might + have + V3</i> nói về quá khứ.");
+    tip(14, "Sau giới từ hoặc động từ cần <b>tân ngữ</b> (me, him, us). Không có danh từ theo sau → đại từ sở hữu (mine, ours).");
+    tip(15, "Thấy <i>suggest / recommend / require / insist + that</i> → động từ <b>nguyên mẫu</b>, không chia -s, không đổi thì.", "Dấu hiệu vàng");
+    tip(16, "Thấy <i>said that + quá khứ</i> → lùi một thì. Câu hỏi gián tiếp <b>không đảo ngữ</b> (where the room was).");
+    tip(17, "Xác định quan hệ ý của hai câu trước khi chọn: đối lập (however), kết quả (therefore), bổ sung (moreover), điều kiện ngược (otherwise).");
+    tip(18, "<i>information, equipment, advice, feedback, furniture</i> không bao giờ có <b>-s</b> hay <b>a/an</b>.", "Dấu hiệu vàng");
+
+    // Bài mới
+    GRAM.toeic.push(
+      ["Giới từ đi kèm (động từ, tính từ, danh từ + giới từ)", T("Học theo cụm cố định, không học giới từ riêng lẻ.", [
+        "<b>Động từ + giới từ</b>: depend on, rely on, apply for, participate in, result in, consist of, refer to, comply with.",
+        "<b>Tính từ + giới từ</b>: responsible for, eligible for, aware of, familiar with, capable of, satisfied with, committed to.",
+        "<b>Danh từ + giới từ</b>: increase in, reason for, demand for, access to, solution to."
+      ], "Nhìn từ đứng ngay trước chỗ trống rồi chọn giới từ đi kèm cố định.", "Mẹo làm bài"), [["Employees are eligible for a bonus after one year.", "Nhân viên đủ điều kiện nhận thưởng sau một năm."], ["Please comply with the safety regulations.", "Vui lòng tuân thủ quy định an toàn."]], [
+          ["All staff must comply ____ the new safety rules.", ["to", "with", "for", "by"], 1, "comply with."],
+          ["Applicants must be eligible ____ a work permit.", ["for", "of", "to", "in"], 0, "be eligible for."],
+          ["There has been a sharp increase ____ the demand for solar panels.", ["of", "in", "on", "at"], 1, "increase in."],
+          ["The success of the project depends ____ teamwork.", ["of", "in", "on", "to"], 2, "depend on."]]],
+      ["Đảo ngữ (Inversion)", T("Dạng đảo ngữ xuất hiện khi trạng từ phủ định hoặc hạn định đứng đầu câu.", [
+        "<b>Never / Rarely / Seldom / Hardly / Under no circumstances</b> + trợ động từ + S + V.",
+        "<b>Not only</b> + trợ động từ + S + V …, <b>but</b> S + also + V.",
+        "<b>Hardly / No sooner</b> + <i>had + S + V3</i> … <i>when / than</i>…",
+        "<b>Only after / Only when</b> + mệnh đề, + trợ động từ + S + V."
+      ], "Thấy Never, Rarely, Hardly, Not only, Only when ở đầu câu → ngay sau là <b>trợ động từ</b> (do/does/did/have/had/will) rồi mới đến chủ ngữ.", "Dấu hiệu vàng"), [["Rarely do we receive such positive feedback.", "Hiếm khi chúng tôi nhận được phản hồi tích cực như vậy."], ["Hardly had the meeting begun when the power went out.", "Cuộc họp vừa bắt đầu thì mất điện."]], [
+          ["Rarely ____ such a detailed report.", ["we see", "do we see", "we do see", "are we see"], 1, "Rarely đứng đầu câu → đảo ngữ với do."],
+          ["Not only ____ the deadline, but they also exceeded the budget.", ["they missed", "did they miss", "they did miss", "missed they"], 1, "Not only đứng đầu → did they miss."],
+          ["Hardly ____ the presentation when the projector stopped working.", ["had she started", "she had started", "did she start", "she started"], 0, "Hardly + had + S + V3 … when."],
+          ["Only after the audit ____ the errors.", ["they discovered", "did they discover", "they did discover", "discovered they"], 1, "Only after … → đảo ngữ."]]],
+      ["Liên từ tương quan & cấu trúc song song", T("Hai vế của một cặp liên từ phải cùng dạng từ.", [
+        "<b>both A and B</b> (+ V số nhiều), <b>either A or B</b>, <b>neither A nor B</b>, <b>not only A but also B</b>, <b>whether A or B</b>.",
+        "<b>Cấu trúc song song</b>: các vế nối bằng and/or/but phải cùng dạng (danh từ–danh từ, V-ing–V-ing, to V–to V, tính từ–tính từ).",
+        "<b>A as well as B</b>: nhấn mạnh A, động từ chia theo A."
+      ], "Gặp both / either / neither / not only → tìm ngay vế còn lại (and / or / nor / but also), rồi chọn dạng từ giống vế đã cho.", "Mẹo làm bài 5 giây"), [["The new role requires both creativity and discipline.", "Vai trò mới đòi hỏi cả sự sáng tạo lẫn kỷ luật."], ["She is responsible for training staff and managing budgets.", "Cô ấy chịu trách nhiệm đào tạo nhân viên và quản lý ngân sách."]], [
+          ["The new software is both user-friendly ____ affordable.", ["or", "and", "nor", "but"], 1, "both … and …"],
+          ["You may pay either by credit card ____ in cash.", ["and", "nor", "or", "but"], 2, "either … or …"],
+          ["He neither called ____ sent an email to confirm.", ["or", "nor", "and", "but"], 1, "neither … nor …"],
+          ["The role involves managing budgets, training staff, and ____ with clients.", ["communicate", "communicating", "communicated", "to communicate"], 1, "Song song: managing, training, communicating (cùng V-ing)."]]]
+    );
+    /* ---- Nội dung chuẩn theo tài liệu của bạn: 5 bài còn lại ---- */
+    const R = (i, title, intro, rules, tp, label, ex, qs, extra) => {
+      const g = GRAM.toeic[i]; g[0] = title; g[1] = T(intro, rules, tp, label); g[2] = ex; g[3] = g[3].concat(qs);
+    };
+    // Từ loại
+    R(3, "Từ loại: N, V, Adj, Adv (Parts of Speech)",
+      "Nhận diện nhanh Danh từ (N), Động từ (V), Tính từ (Adj), Trạng từ (Adv) dựa vào đuôi từ và vị trí đứng trong câu mà không cần dịch hết nghĩa.", [
+      "<b>Danh từ (N)</b>: đứng sau mạo từ (a/an/the), tính từ sở hữu (my, his, their, its), tính từ (Adj + N) hoặc giới từ (in, on, of, for + N). Đuôi thường gặp: <code>-tion, -sion, -ment, -ness, -ity, -ance, -ence</code> (chỉ người: <code>-er, -or, -ist, -ant, -ee</code>).",
+      "<b>Tính từ (Adj)</b>: đứng trước danh từ (Adj + N) hoặc sau động từ nối (be, become, remain, seem, look, find + O + Adj). Đuôi: <code>-ful, -less, -able, -ible, -ous, -ive, -al, -ic</code>.",
+      "<b>Trạng từ (Adv)</b>: bổ nghĩa cho động từ thường (Adv + V hoặc V + O + Adv), đứng trước tính từ (Adv + Adj), hoặc trước Phân từ 2 (be + Adv + V3/ed). Đuôi: <code>Adj + -ly</code>."
+    ], "1) Danh từ ghép (N + N) như <i>safety regulations, customer satisfaction</i> (không chọn Adj nếu cụm N+N đã cố định). 2) Một số từ đuôi <code>-ly</code> nhưng là <b>tính từ</b>: costly, timely, friendly, likely; đuôi <code>-al</code> nhưng là <b>danh từ</b>: approval, proposal, arrival, renewal.", "Bẫy TOEIC kinh điển",
+      [["Customer satisfaction is our top priority.", "Sự hài lòng của khách hàng là ưu tiên hàng đầu."], ["The approval came after a long discussion.", "Sự phê duyệt đến sau một cuộc thảo luận dài."]], [
+      ["The company's ____ of the new software saved a lot of time.", ["implement", "implementation", "implementing", "implemented"], 1, "Sau sở hữu cách the company's và trước of cần danh từ → implementation (đuôi -tion)."],
+      ["Please submit your application ____ before the deadline.", ["prompt", "promptly", "promptness", "prompted"], 1, "Bổ nghĩa cho động từ submit → trạng từ."],
+      ["The warehouse manager seems ____ with the inventory system.", ["satisfy", "satisfied", "satisfaction", "satisfactorily"], 1, "Sau động từ nối seem cần tính từ (satisfied)."],
+      ["We received a ____ response from the client.", ["timely", "timeliness", "time", "timed"], 0, "timely có đuôi -ly nhưng là tính từ, đứng trước danh từ response."],
+      ["The board's ____ of the budget came after a long discussion.", ["approve", "approval", "approving", "approved"], 1, "approval có đuôi -al nhưng là danh từ."],
+      ["Customer ____ is our top priority.", ["satisfy", "satisfied", "satisfaction", "satisfactory"], 2, "Danh từ ghép customer satisfaction."]]);
+    // Liên từ vs Giới từ
+    R(5, "Liên từ vs. Giới từ (Conjunctions vs. Prepositions)",
+      "Cùng mang một nghĩa (Bởi vì, Mặc dù, Trong khi) nhưng <b>Liên từ</b> đi với Mệnh đề (S + V), còn <b>Giới từ</b> đi với Cụm danh từ (N / V-ing).", [
+      "<b>Nhóm “Mặc dù”</b>:<br>• Liên từ (+ <code>S + V</code>): Although, Even though, Though, While, Whereas<br>• Giới từ (+ <code>N / V-ing</code>): Despite, In spite of, Regardless of",
+      "<b>Nhóm “Bởi vì”</b>:<br>• Liên từ (+ <code>S + V</code>): Because, Since, As, Now that, Seeing that<br>• Giới từ (+ <code>N / V-ing</code>): Because of, Due to, Owing to, Thanks to, As a result of",
+      "<b>Nhóm “Trong suốt / Khi”</b>:<br>• Liên từ (+ <code>S + V</code>): While, When<br>• Giới từ (+ <code>N thời gian</code>): During, Throughout"
+    ], "<b>Bước 1</b>: nhìn vế sau chỗ trống (trước dấu phẩy) xem có động từ chia thì (S + V) hay chỉ là cụm danh từ (Adj + N). <b>Bước 2</b>: loại ngay 2 đáp án sai cấu trúc, chỉ còn xét nghĩa 2 đáp án còn lại!", "Cách làm 2 bước",
+      [["Although the price rose, demand stayed strong.", "Dù giá tăng, nhu cầu vẫn mạnh."], ["Due to the price increase, demand fell.", "Do giá tăng, nhu cầu giảm."]], [
+      ["____ the heavy traffic, we arrived on time.", ["Although", "Despite", "Because", "While"], 1, "Sau chỗ trống là cụm danh từ → giới từ; nghĩa “mặc dù” → Despite."],
+      ["____ the shipment was delayed, the client agreed to wait.", ["Despite", "In spite of", "Even though", "Due to"], 2, "Sau chỗ trống là mệnh đề (S + V) → liên từ → Even though."],
+      ["The event was postponed ____ the bad weather.", ["because", "due to", "although", "while"], 1, "Sau chỗ trống là cụm danh từ, nghĩa “bởi vì” → due to."],
+      ["The event was postponed ____ the weather was bad.", ["because of", "due to", "since", "thanks to"], 2, "Sau chỗ trống là mệnh đề → liên từ Since (= vì)."],
+      ["Staff must stay reachable ____ the entire conference.", ["throughout", "while", "whereas", "although"], 0, "Sau chỗ trống là cụm danh từ chỉ thời gian → throughout."],
+      ["____ she was on leave, her colleague managed the account.", ["During", "While", "Despite", "Throughout"], 1, "Sau chỗ trống là mệnh đề (she was) → While."]]);
+    // Câu điều kiện
+    R(6, "Câu điều kiện & Đảo ngữ (Should / Were / Had)",
+      "Nắm vững 3 loại câu điều kiện và đặc biệt là cấu trúc <b>Đảo ngữ bỏ “If”</b> (Should / Were / Had) rất hay gặp ở câu khó Part 5.", [
+      "<b>Loại 1</b> (có thật ở hiện tại/tương lai): <code>If + S + V (hiện tại đơn), S + will/can/please + V_inf</code>.<br>→ Đảo ngữ: <code>Should + S + V_inf (nguyên mẫu không chia)…</code>",
+      "<b>Loại 2</b> (không có thật ở hiện tại): <code>If + S + V2/ed (were), S + would/could + V_inf</code>.<br>→ Đảo ngữ: <code>Were + S + to V_inf / Adj / N…</code>",
+      "<b>Loại 3</b> (không có thật trong quá khứ): <code>If + S + had + V3/ed, S + would/could + have + V3/ed</code>.<br>→ Đảo ngữ: <code>Had + S + (not) + V3/ed…</code>"
+    ], "Nếu đầu câu có chỗ trống mà ngay sau chủ ngữ là <b>động từ nguyên mẫu</b> (kể cả chủ ngữ số ít như he, she, the item) và vế sau là <i>please contact / will…</i> → chọn ngay <b>Should</b>!", "Nhận diện ở đầu câu",
+      [["Should you need help, please contact us.", "Nếu bạn cần hỗ trợ, xin hãy liên hệ chúng tôi."], ["Had we known, we would have acted sooner.", "Nếu biết trước, chúng tôi đã hành động sớm hơn."], ["Were he to resign, we would need a replacement.", "Nếu anh ấy từ chức, chúng ta sẽ cần người thay."]], [
+      ["____ you need further assistance, please contact our help desk.", ["Should", "Were", "Had", "Unless"], 0, "Sau you là need (nguyên mẫu), vế sau là please contact → Should."],
+      ["____ the manager to approve the budget, we would start the project immediately.", ["Were", "Should", "Had", "Will"], 0, "Có to V_inf → đảo ngữ loại 2: Were + S + to V."],
+      ["____ we known about the delay, we would have rescheduled the meeting.", ["Had", "Should", "Were", "Did"], 0, "Vế sau would have + V3 → loại 3: Had + S + V3."],
+      ["If the supplier ____ the order on time, we would have avoided the penalty.", ["delivered", "had delivered", "would deliver", "delivers"], 1, "Vế sau would have + V3 → vế if dùng had + V3."],
+      ["____ the item arrive late, please contact us.", ["Should", "Were", "Had", "Does"], 0, "Sau chủ ngữ the item là arrive (nguyên mẫu) → Should."]]);
+    // Mệnh đề quan hệ
+    R(7, "Mệnh đề quan hệ & rút gọn (Relative Clauses)",
+      "Cách chọn đại từ quan hệ (who, whom, whose, which) và rút gọn mệnh đề quan hệ thành V-ing hoặc V3/ed.", [
+      "<b>Who + V</b> (thay cho người, làm chủ ngữ) · <b>Whom + S + V</b> (thay cho người, làm tân ngữ).",
+      "<b>Whose + N</b> (không có mạo từ): chỉ sở hữu cho cả người và vật (VD: <i>the company whose profits rose…</i>).",
+      "<b>Which + V / S + V</b>: thay cho vật. Lưu ý: giới từ + which/whom như <code>in which = where</code>, <code>on which = when</code>.",
+      "<b>Rút gọn MĐQH</b>: khi trong câu đã có động từ chính chia thì, động từ thứ 2 bổ nghĩa cho danh từ đứng trước sẽ rút gọn thành <b>V-ing</b> (nghĩa chủ động) hoặc <b>V3/ed</b> (nghĩa bị động)."
+    ], "Nhìn ngay sau chỗ trống: nếu có <b>tân ngữ</b> (cụm danh từ) → chọn <b>V-ing</b>; nếu là <b>giới từ</b> (by, in, at, for, to, from) → chọn <b>V3/ed</b>.", "Mẹo phân biệt V-ing và V3/ed rút gọn",
+      [["The company whose profits rose plans to expand.", "Công ty có lợi nhuận tăng đang định mở rộng."], ["Applications received after the deadline will be rejected.", "Hồ sơ nhận sau hạn chót sẽ bị từ chối."]], [
+      ["The company ____ profits rose sharply plans to expand.", ["who", "which", "whose", "whom"], 2, "Sau chỗ trống là danh từ profits không có mạo từ → whose."],
+      ["The manager ____ we interviewed yesterday has accepted the offer.", ["whom", "whose", "which", "where"], 0, "Chỉ người, làm tân ngữ (có we interviewed) → whom."],
+      ["Applications ____ after the deadline will not be considered.", ["receiving", "received", "receive", "are received"], 1, "Sau chỗ trống là giới từ after → V3/ed rút gọn."],
+      ["Employees ____ the survey will receive a gift card.", ["completed", "completing", "complete", "completion"], 1, "Sau chỗ trống là tân ngữ the survey → V-ing rút gọn."],
+      ["The conference room in ____ the meeting will be held has been renovated.", ["which", "where", "that", "whom"], 0, "Giới từ + which (in which = where)."]]);
+    // Bị động
+    R(8, "Câu bị động: Chủ động vs. Bị động (Active vs. Passive)",
+      "Phân biệt cực nhanh khi nào chia Chủ động (Active) và khi nào chia Bị động (Passive) cho cả động từ chính lẫn phân từ.", [
+      "<b>Công thức chung</b>: <code>be + V3/ed</code> (modal verbs: <code>can/must/should/will + be + V3/ed</code>).",
+      "<b>Mẹo Tân ngữ (Object Rule)</b>: với ngoại động từ (submit, approve, hold, cancel, manufacture), nếu ngay sau chỗ trống <b>KHÔNG</b> có danh từ làm tân ngữ (mà là giới từ by, in, on, at, for, to-V hoặc dấu chấm câu) → 95% chia <b>bị động</b>.",
+      "Nếu sau chỗ trống <b>CÓ</b> cụm danh từ làm tân ngữ → chia <b>chủ động</b>.",
+      "<b>Phân từ làm tính từ</b>: V-ing (vật gây ra cảm xúc) · V3/ed (người cảm thấy)."
+    ], "Các <b>nội động từ</b> như <i>arrive, occur, happen, take place, rise, remain, consist (of), expire</i> KHÔNG BAO GIỜ chia bị động dù phía sau không có tân ngữ!", "Cẩn thận nội động từ (Intransitive Verbs)",
+      [["All reports must be submitted by Friday.", "Tất cả báo cáo phải được nộp trước thứ Sáu."], ["The meeting will take place on Monday.", "Cuộc họp sẽ diễn ra vào thứ Hai."]], [
+      ["All expense reports must ____ to the accounting department by Friday.", ["submit", "be submitted", "submitting", "submitted"], 1, "Sau chỗ trống là giới từ to, không có tân ngữ → bị động."],
+      ["The company ____ a new line of eco-friendly products next month.", ["will launch", "will be launched", "is launched", "has launched"], 0, "Sau chỗ trống có tân ngữ a new line → chủ động."],
+      ["The annual meeting will ____ in the main hall on March 3.", ["take place", "be taken place", "taken place", "taking place"], 0, "take place là nội động từ, không chia bị động."],
+      ["A security deposit will ____ upon arrival.", ["require", "be required", "requiring", "required"], 1, "Không có tân ngữ, deposit là vật bị yêu cầu → bị động."],
+      ["The contract will ____ at the end of this year.", ["expire", "be expired", "expiring", "expired"], 0, "expire là nội động từ."]]);
+    /* ---- Các chủ điểm bổ sung ---- */
+    const tipC = (i, text, label) => { GRAM.chat[i][1] += `<div class="exp" style="margin-top:8px">💡 <b>${label || 'Mẹo làm bài'}:</b> ${text}</div>` };
+    tipC(0, "Do/Does/Did + chủ ngữ + V nguyên mẫu. Hỏi giờ → When, nơi chốn → Where, người → Who, lý do → Why.");
+    tipC(1, "<b>Could</b> lịch sự hơn <b>Can</b>. Xin phép dùng <i>May I…?</i>; đáp lại: <i>Sure, go ahead.</i>");
+    tipC(2, "Đang làm → am/is/are + V-ing; thói quen (usually, every day) → hiện tại đơn; kéo dài đến nay (for/since) → hiện tại hoàn thành.", "Dấu hiệu vàng");
+    tipC(3, "Kế hoạch đã có → <b>be going to</b>; quyết định ngay lúc nói → <b>will</b>; hỏi kinh nghiệm → <i>Have you ever + V3?</i>");
+    tipC(4, "Học theo cụm: interested <b>in</b>, good <b>at</b>, afraid <b>of</b>. Thứ → on, tháng/năm → in, giờ → at.");
+    tipC(5, "Đang làm thì có việc chen vào: <i>was/were + V-ing</i> (while) + <i>quá khứ đơn</i> (when).", "Dấu hiệu vàng");
+    tipC(6, "<b>mustn't</b> = cấm; <b>don't have to</b> = không cần; <b>should</b> để khuyên.");
+    tipC(7, "Thấy <i>than</i> → so sánh hơn; <i>the + -est</i> → nhất; <i>as … as</i> → bằng.");
+    tipC(8, "Có thể xảy ra → If + hiện tại, will; khuyên → <i>If I were you, I would…</i>");
+    tipC(9, "Đếm được → many/few; không đếm được → much/little; phủ định/nghi vấn → any.");
+    const L = (title, intro, rules, tp, label, ex, qs) => [title, T(intro, rules, tp, label), ex, qs];
+    GRAM.toeic.push(
+      L("Mệnh đề danh ngữ (Noun Clauses)", "Mệnh đề đóng vai trò danh từ (chủ ngữ, tân ngữ, bổ ngữ), bắt đầu bằng that, whether/if, what, who, when, where, how.", [
+        "<b>that + S + V</b>: sau suggest, believe, announce, show, ensure…; mệnh đề đã đủ thành phần.",
+        "<b>whether / if + S + V</b>: nghĩa “liệu”; chỉ dùng <b>whether</b> khi đứng đầu câu, sau giới từ, hoặc đi với <i>or not</i> / to V.",
+        "<b>what / who / when / where / how + S + V</b>: giữ trật tự khẳng định, không đảo ngữ (I don't know where the office is).",
+        "<b>what</b> = the thing that (còn thiếu chủ ngữ/tân ngữ trong mệnh đề)."
+      ], "Sau chỗ trống đã đủ S + V → <b>that</b>; còn thiếu chủ ngữ hoặc tân ngữ → <b>what</b>. Thấy <i>or not</i> hoặc giới từ phía trước → <b>whether</b>.", "Phân biệt that / what / whether",
+        [["The report shows that sales increased.", "Báo cáo cho thấy doanh số đã tăng."], ["We have not decided whether we will renew the contract.", "Chúng tôi chưa quyết định có gia hạn hợp đồng hay không."]], [
+        ["The survey shows ____ most customers prefer online shopping.", ["what", "that", "whether", "who"], 1, "Mệnh đề sau đã đủ S + V → that."],
+        ["We are still discussing ____ we should hire more staff or not.", ["that", "what", "whether", "which"], 2, "Có or not → whether."],
+        ["____ the manager said at the meeting surprised everyone.", ["That", "What", "Whether", "Which"], 1, "Mệnh đề thiếu tân ngữ của said → What."],
+        ["The client asked us ____ the delivery would arrive.", ["when", "when would", "that", "what"], 0, "Giữ trật tự khẳng định: when + S + V."]]),
+      L("Rút gọn mệnh đề trạng ngữ (V-ing / V3 / Having V3)", "Khi hai mệnh đề cùng chủ ngữ, mệnh đề phụ (sau before, after, while, when, once…) có thể rút gọn.", [
+        "<b>V-ing</b> (chủ động): <i>Before leaving the office, please turn off the lights.</i>",
+        "<b>V3/ed</b> (bị động): <i>When asked about the delay, he declined to comment.</i>",
+        "<b>Having + V3</b>: hành động xảy ra trước hành động ở mệnh đề chính: <i>Having reviewed the contract, she signed it.</i>",
+        "Chủ ngữ của mệnh đề chính phải là chủ thể thực hiện (hoặc chịu) hành động ở cụm rút gọn."
+      ], "Sau chỗ trống là <b>tân ngữ</b> → V-ing; sau chỗ trống là <b>giới từ</b> hoặc dấu phẩy → V3. Thấy <i>before / after / while / when / once</i> + chỗ trống mà phía sau không có chủ ngữ → chọn dạng rút gọn.", "Mẹo nhanh",
+        [["Before leaving the office, please turn off the lights.", "Trước khi rời văn phòng, hãy tắt đèn."], ["Having reviewed the contract, she signed it.", "Sau khi xem lại hợp đồng, cô ấy đã ký."]], [
+        ["After ____ the report, the manager sent it to the director.", ["complete", "completing", "completed", "to complete"], 1, "After + V-ing (chủ động, có tân ngữ the report)."],
+        ["When ____ about the delay, the spokesperson declined to comment.", ["asking", "asked", "ask", "to ask"], 1, "Bị động rút gọn: When (he was) asked."],
+        ["Please read the instructions carefully before ____ the machine.", ["operate", "operating", "operated", "to operate"], 1, "Before + V-ing."],
+        ["____ all the documents, she left the office.", ["Having signed", "Signed", "To sign", "Sign"], 0, "Ký xong rồi mới rời văn phòng → Having + V3."]]),
+      L("So sánh nâng cao", "Các cấu trúc so sánh ngoài so sánh hơn và so sánh nhất cơ bản.", [
+        "<b>as + adj/adv + as</b> (bằng nhau); <b>not as/so … as</b>; <b>twice/three times as + adj + as</b>.",
+        "<b>The + so sánh hơn …, the + so sánh hơn …</b> (càng … càng …): <i>The sooner, the better.</i>",
+        "<b>So sánh kép</b>: <i>more and more + adj dài</i> / <i>adj-er and adj-er</i> (ngày càng).",
+        "<b>one of the + so sánh nhất + N số nhiều</b>; <b>the same … as</b>, <b>different from</b>, <b>similar to</b>."
+      ], "Thấy <b>the + so sánh hơn</b> ở một vế thì vế kia cũng là <b>the + so sánh hơn</b>. Sau <i>one of the most</i> luôn là danh từ <b>số nhiều</b>.", "Dấu hiệu vàng",
+        [["The sooner you reply, the better.", "Bạn trả lời càng sớm càng tốt."], ["Profits are twice as high as last year's.", "Lợi nhuận cao gấp đôi năm ngoái."]], [
+        ["The ____ you submit the form, the sooner you will receive a reply.", ["early", "earlier", "earliest", "more early"], 1, "The + so sánh hơn … the + so sánh hơn."],
+        ["This year's profits are twice as high ____ last year's.", ["than", "as", "to", "from"], 1, "twice as … as."],
+        ["She is one of the most talented ____ in our department.", ["engineer", "engineers", "engineering", "engineered"], 1, "one of the most + N số nhiều."],
+        ["Online shopping is becoming ____ popular.", ["more and more", "most and most", "many and many", "more or more"], 0, "So sánh kép: more and more + tính từ dài."]]),
+      L("Cấu trúc kết quả: so / such / too / enough", "Bốn cấu trúc hay bị đánh lừa ở Part 5.", [
+        "<b>so + adj/adv + that + S + V</b>: so đi với tính từ/trạng từ.",
+        "<b>such (+ a/an) + (adj) + N + that + S + V</b>: such đi với danh từ.",
+        "<b>too + adj/adv + (for O) + to V</b> (quá … không thể); <b>adj/adv + enough + (for O) + to V</b> (đủ … để).",
+        "<b>so that + S + V</b> (để mà, mục đích); <b>in order to / so as to + V</b>."
+      ], "Nhìn từ ngay sau chỗ trống: tính từ/trạng từ → <b>so</b>; (a/an +) danh từ → <b>such</b>. <b>enough</b> đứng sau tính từ nhưng trước danh từ.", "Mẹo phân biệt so / such",
+        [["The demand was so high that we ran out of stock.", "Nhu cầu cao đến mức chúng tôi hết hàng."], ["The room is not large enough to hold 200 people.", "Căn phòng không đủ rộng để chứa 200 người."]], [
+        ["The demand was ____ high that we ran out of stock.", ["so", "such", "too", "enough"], 0, "so + tính từ + that."],
+        ["It was ____ a successful campaign that sales doubled.", ["so", "such", "too", "very"], 1, "such + a + (adj) + N + that."],
+        ["The room is not large ____ to hold 200 people.", ["enough", "so", "too", "such"], 0, "adj + enough + to V."],
+        ["The software is ____ complicated to learn in one day.", ["so", "such", "too", "enough"], 2, "too + adj + to V (quá … không thể)."]]),
+      L("Cấu trúc sai khiến: have / get / make / let / help", "Phân biệt người làm hành động và dạng của động từ phía sau.", [
+        "<b>have + O + V_inf</b> (nhờ ai làm) · <b>have + O + V3</b> (nhờ làm giúp): <i>have the report printed</i>.",
+        "<b>get + O + to V</b> · <b>get + O + V3</b>.",
+        "<b>make + O + V_inf</b> (bắt buộc) · <b>let + O + V_inf</b> (cho phép) · <b>help + O + (to) V_inf</b>.",
+        "Bị động: <b>be made to V</b>, <b>be allowed to V</b>."
+      ], "Sau make / let / have + tân ngữ chỉ người → động từ <b>nguyên mẫu không to</b>. Sau get + người → <b>to V</b>. Tân ngữ là vật (việc do người khác làm) → <b>V3</b>.", "Mẹo nhanh",
+        [["I had the report printed.", "Tôi đã nhờ in bản báo cáo."], ["The policy lets staff work from home.", "Chính sách cho phép nhân viên làm việc ở nhà."]], [
+        ["The manager had his assistant ____ the schedule.", ["update", "to update", "updating", "updated"], 0, "have + người + V nguyên mẫu."],
+        ["We need to get the printer ____ before the meeting.", ["repair", "repairing", "repaired", "to repair"], 2, "get + vật + V3."],
+        ["The new policy lets employees ____ from home on Fridays.", ["to work", "working", "work", "worked"], 2, "let + O + V nguyên mẫu."],
+        ["She got the client ____ the contract by Friday.", ["sign", "to sign", "signing", "signed"], 1, "get + người + to V."]]),
+      L("Từ chỉ định lượng & another / other / the other", "Nhìn danh từ phía sau để chọn từ chỉ định lượng.", [
+        "<b>another + N số ít</b> · <b>other + N số nhiều</b> · <b>the other + N</b> (cái còn lại đã xác định) · <b>others</b> (đại từ) · <b>the others</b> (những cái còn lại).",
+        "<b>all / most / some / many + of the + N số nhiều</b>; <b>all / most of the + N không đếm được</b>.",
+        "<b>both of</b> + V số nhiều; <b>either / neither / each of</b> + N số nhiều + V số ít.",
+        "<b>every + N số ít</b> · <b>all + N số nhiều</b>."
+      ], "Danh từ số ít → another / each / every; số nhiều → other / all / both / many. Có <b>of</b> thì phía sau phải có <b>the / these / his</b> + danh từ.", "Mẹo nhanh",
+        [["We need another week to finish the project.", "Chúng tôi cần thêm một tuần nữa để hoàn thành dự án."], ["Neither of the candidates has the experience.", "Cả hai ứng viên đều không có kinh nghiệm."]], [
+        ["We need ____ week to finish the project.", ["other", "others", "another", "the others"], 2, "week là danh từ số ít → another."],
+        ["Most of ____ employees attended the training.", ["the", "a", "an", "every"], 0, "most of + the + N."],
+        ["Neither of the candidates ____ the required experience.", ["have", "has", "are", "were"], 1, "Neither of + N → động từ số ít."],
+        ["Some branches opened in 2020; ____ opened last year.", ["other", "another", "others", "the other"], 2, "others là đại từ số nhiều thay cho other branches."]]),
+      L("Cụm V-ing quen thuộc & “to” là giới từ", "Chọn V-ing hay V_inf phụ thuộc vào cụm cố định, không phụ thuộc vào cảm giác.", [
+        "<b>spend / waste time or money + (in) V-ing</b>; <b>have difficulty / trouble (in) V-ing</b>.",
+        "<b>be worth V-ing</b>; <b>it is no use V-ing</b>; <b>can't help V-ing</b>; <b>feel like V-ing</b>.",
+        "<b>to là giới từ + V-ing</b>: look forward to, be used to, object to, be committed/dedicated to, in addition to, contribute to, be accustomed to.",
+        "<b>to là một phần của to V</b>: be able to, be about to, used to + V_inf (thói quen quá khứ)."
+      ], "Gặp cụm có <b>to</b>, hãy thử thêm danh từ phía sau: <i>look forward to your reply</i> được → <b>to là giới từ</b> → V-ing.", "Mẹo kiểm tra chữ “to”",
+        [["We look forward to meeting you.", "Chúng tôi mong được gặp bạn."], ["This proposal is worth considering.", "Đề xuất này đáng được cân nhắc."]], [
+        ["We look forward to ____ you at the conference.", ["meet", "meeting", "met", "to meet"], 1, "look forward to + V-ing."],
+        ["The company is committed to ____ customer satisfaction.", ["improve", "improving", "improved", "to improve"], 1, "be committed to + V-ing."],
+        ["Employees spent two days ____ the new software.", ["to learn", "learn", "learning", "learned"], 2, "spend + thời gian + V-ing."],
+        ["This proposal is worth ____ carefully.", ["consider", "considering", "to consider", "considered"], 1, "be worth + V-ing."]]),
+      L("Giới từ chỉ nơi chốn & chuyển động", "Phân biệt in / at / on và các giới từ chỉ hướng.", [
+        "<b>in</b> (bên trong khu vực, thành phố, nước) · <b>at</b> (điểm cụ thể: at the entrance) · <b>on</b> (bề mặt, tầng, đường: on the second floor).",
+        "<b>between</b> (hai đối tượng) · <b>among</b> (từ ba trở lên) · <b>beside</b> (bên cạnh) khác <b>besides</b> (ngoài ra).",
+        "<b>across</b> (băng qua), <b>through</b> (xuyên qua), <b>along</b> (dọc theo), <b>opposite</b> (đối diện), <b>next to</b> (cạnh).",
+        "<b>to</b> (hướng tới) · <b>into</b> (vào trong) · <b>from</b> (từ)."
+      ], "Hai đối tượng → <b>between</b>; ba trở lên hoặc một nhóm → <b>among</b>. Tầng nhà → <b>on</b>; điểm hẹn cụ thể → <b>at</b>.", "Dấu hiệu vàng",
+        [["The sales office is on the third floor.", "Phòng kinh doanh ở tầng ba."], ["The decision was shared among all department heads.", "Quyết định được chia sẻ cho tất cả trưởng bộ phận."]], [
+        ["The sales office is ____ the third floor.", ["in", "at", "on", "by"], 2, "on + tầng."],
+        ["The agreement was reached ____ the two companies.", ["among", "between", "within", "through"], 1, "Hai đối tượng → between."],
+        ["Please meet me ____ the main entrance at nine.", ["on", "in", "at", "between"], 2, "Điểm hẹn cụ thể → at."],
+        ["The decision will be shared ____ all department heads.", ["between", "among", "beside", "besides"], 1, "Nhiều hơn hai đối tượng → among."]]),
+      L("Câu hỏi đuôi & câu hỏi gián tiếp (Part 2)", "Hai dạng câu hỏi hay xuất hiện ở phần nghe hỏi – đáp.", [
+        "<b>Câu hỏi đuôi</b>: vế chính khẳng định → đuôi phủ định, vế chính phủ định → đuôi khẳng định; dùng cùng trợ động từ: <i>You attended the meeting, didn't you?</i>",
+        "Mệnh lệnh: <i>…, will you?</i> · Đề nghị: <i>Let's …, shall we?</i>",
+        "<b>Câu hỏi gián tiếp</b>: <i>Could you tell me + wh-/if + S + V</i> (không đảo ngữ).",
+        "Câu hỏi phủ định (<i>Haven't you finished?</i>): Yes = đã xong, No = chưa xong."
+      ], "Câu hỏi đuôi: đuôi <b>đối nghịch</b> với vế chính và dùng đúng trợ động từ. Câu hỏi gián tiếp: sau từ để hỏi là <b>S + V</b>, không dùng do/does/did.", "Mẹo nhanh",
+        [["The shipment arrived on time, didn't it?", "Lô hàng đã đến đúng giờ, phải không?"], ["Could you tell me where the cafeteria is?", "Bạn cho tôi biết căng-tin ở đâu được không?"]], [
+        ["The shipment arrived on time, ____?", ["did it", "didn't it", "wasn't it", "hasn't it"], 1, "Vế chính khẳng định, quá khứ → didn't it."],
+        ["You haven't submitted the report yet, ____?", ["have you", "haven't you", "did you", "don't you"], 0, "Vế chính phủ định → đuôi khẳng định have you."],
+        ["Could you tell me where ____?", ["is the cafeteria", "the cafeteria is", "does the cafeteria", "the cafeteria does be"], 1, "Câu hỏi gián tiếp: where + S + V."],
+        ["Do you know ____ the meeting starts?", ["what time does", "what time", "when does", "that time"], 1, "Câu hỏi gián tiếp: what time + S + V."]])
+    );
+    GRAM.chat.push(
+      L("Câu hỏi đuôi & hỏi lịch sự gián tiếp", "Dùng để xác nhận thông tin và hỏi lịch sự trong giao tiếp.", [
+        "<b>Câu hỏi đuôi</b>: vế chính khẳng định → đuôi phủ định (It's nice, isn't it?); vế chính phủ định → đuôi khẳng định (You don't like it, do you?).",
+        "<b>Hỏi lịch sự</b>: Could you tell me / Do you know + <b>wh- + S + V</b> (không đảo ngữ).",
+        "Đáp lại: <i>Yes, it is. / No, it isn't.</i>"
+      ], "Đuôi luôn <b>đối nghịch</b> với vế chính và dùng cùng trợ động từ.", "Mẹo nhanh",
+        [["It's a nice day, isn't it?", "Hôm nay trời đẹp nhỉ?"], ["Do you know what time the bank opens?", "Bạn có biết mấy giờ ngân hàng mở cửa không?"]], [
+        ["It's a nice day, ____?", ["isn't it", "is it", "does it", "doesn't it"], 0, "Vế chính khẳng định → đuôi phủ định."],
+        ["You don't like coffee, ____?", ["don't you", "do you", "aren't you", "did you"], 1, "Vế chính phủ định → đuôi khẳng định."],
+        ["Do you know ____ the bank opens?", ["what time", "what time does", "when does", "that"], 0, "Hỏi gián tiếp: what time + S + V."]]),
+      L("Hiện tại hoàn thành vs. quá khứ đơn", "Hai thì dễ nhầm nhất khi kể về kinh nghiệm.", [
+        "<b>Hiện tại hoàn thành</b>: ever, never, already, yet, just, since, for — không nêu mốc cụ thể.",
+        "<b>Quá khứ đơn</b>: yesterday, last week, ago, in 2020 — có mốc thời gian cụ thể.",
+        "Hỏi kinh nghiệm: <i>Have you ever + V3?</i>, trả lời chi tiết bằng quá khứ đơn."
+      ], "Có mốc thời gian cụ thể trong quá khứ (yesterday, ago, in 2019) → <b>quá khứ đơn</b>; không nêu mốc, nói về trải nghiệm hoặc kết quả hiện tại → <b>hiện tại hoàn thành</b>.", "Dấu hiệu vàng",
+        [["I went to Japan three years ago.", "Tôi đã đến Nhật ba năm trước."], ["I have never tried durian.", "Tôi chưa từng thử sầu riêng."]], [
+        ["I ____ to Japan three years ago.", ["have been", "went", "have gone", "go"], 1, "ago → quá khứ đơn."],
+        ["She ____ her homework yet.", ["didn't finish", "hasn't finished", "doesn't finish", "not finished"], 1, "yet → hiện tại hoàn thành."],
+        ["Have you ever ____ Vietnamese coffee?", ["try", "tried", "trying", "to try"], 1, "Have you ever + V3."]]),
+      L("Cụm động từ (phrasal verbs) thông dụng", "Các cụm động từ xuất hiện liên tục trong hội thoại hằng ngày.", [
+        "<b>look for</b> (tìm) · <b>look after</b> (chăm sóc) · <b>find out</b> (tìm ra) · <b>give up</b> (từ bỏ) · <b>run out of</b> (hết) · <b>set up</b> (thiết lập).",
+        "<b>turn on / turn off</b> (bật / tắt) · <b>put on / take off</b> (mặc / cởi) · <b>pick up</b> (đón, nhặt) · <b>get up</b> (thức dậy).",
+        "Có thể tách: <i>turn the light off</i> hoặc <i>turn off the light</i>."
+      ], "Tân ngữ là <b>đại từ</b> (it, them) thì phải đứng giữa: turn <b>it</b> off, không nói turn off it.", "Mẹo nhanh",
+        [["I'm looking for my keys.", "Tôi đang tìm chìa khóa."], ["Please turn it off.", "Làm ơn tắt nó đi."]], [
+        ["I can't find my keys. I'm ____ them everywhere.", ["looking for", "looking after", "looking up", "looking out"], 0, "look for = tìm."],
+        ["Please ____ the lights when you leave.", ["turn off", "turn at", "turn for", "turn in"], 0, "turn off = tắt."],
+        ["The light is too bright. Please turn ____ off.", ["it", "on it", "up it", "at it"], 0, "Đại từ it đứng giữa cụm động từ."]]),
+      L("Giới từ nơi chốn & chỉ đường", "Ngôn ngữ cơ bản khi hỏi đường và chỉ đường.", [
+        "Hỏi: <i>How do I get to…? / Where is…?</i> Chỉ đường dùng mệnh lệnh: <i>Go straight, turn left, cross the street.</i>",
+        "<b>turn left/right at</b> (the corner, the traffic light) · <b>go along / go past / go across</b>.",
+        "<b>between … and …</b> · <b>opposite</b> · <b>next to</b> · <b>behind</b> · <b>in front of</b> · <b>on your left/right</b>."
+      ], "Chỉ hai đối tượng → <b>between … and …</b>; đối diện bên kia đường → <b>opposite</b> (không có to).", "Dấu hiệu vàng",
+        [["Go straight and turn left at the traffic light.", "Đi thẳng rồi rẽ trái ở đèn giao thông."], ["The bank is between the post office and the pharmacy.", "Ngân hàng nằm giữa bưu điện và hiệu thuốc."]], [
+        ["The bank is ____ the post office and the pharmacy.", ["between", "among", "beside", "behind"], 0, "between … and …"],
+        ["Go straight and turn left ____ the traffic light.", ["at", "in", "on", "to"], 0, "turn left at + điểm cụ thể."],
+        ["The café is ____ the cinema, on the other side of the street.", ["opposite", "among", "between", "next"], 0, "Đối diện bên kia đường → opposite."]]),
+      L("Get / make / have trong đời thường", "Ba động từ nhẹ nghĩa nhưng cực kỳ phổ biến.", [
+        "<b>get + tính từ</b> = trở nên (get tired, get cold) · <b>get + V3</b> (get lost) · <b>get used to + V-ing</b> (dần quen).",
+        "<b>make + O + V</b> (khiến ai làm gì): <i>It makes me laugh.</i>",
+        "<b>have + something + V3</b> (nhờ ai làm): <i>I had my hair cut.</i> · <b>have to</b> (phải)."
+      ], "<b>get + tính từ</b> = trở nên; <b>get used to + V-ing</b> = dần quen với. Đừng nhầm với <i>used to + V</i> (thói quen trong quá khứ).", "Mẹo nhanh",
+        [["It's getting cold outside.", "Bên ngoài đang trở lạnh."], ["I had my laptop fixed yesterday.", "Hôm qua tôi đã nhờ sửa laptop."]], [
+        ["It's getting ____ outside. Take a jacket.", ["cold", "coldly", "coldness", "colder than"], 0, "get + tính từ."],
+        ["I'm not used to ____ up so early.", ["get", "getting", "got", "to get"], 1, "be used to + V-ing."],
+        ["I had my laptop ____ yesterday.", ["fix", "fixing", "fixed", "to fix"], 2, "have + vật + V3."]])
+    );
+    // Xáo trộn thứ tự đáp án để vị trí đáp án đúng không đoán được
+    Object.values(GRAM).forEach(L => L.forEach(g => g[3].forEach(q => { const c = q[1][q[2]], o = q[1].map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]); q[1] = o; q[2] = o.indexOf(c) })));
+    let gl = -1;
+    V.gram = () => {
+      const G = GRAM[mode], dn = S.gdone || {}, nd = G.filter((g, i) => dn[mode + i]).length;
+      if (gl < 0) return `<h2>Ngữ pháp ${mode === 'toeic' ? 'TOEIC' : 'giao tiếp'}</h2><p class="mut">Đọc lý thuyết ngắn, xem ví dụ rồi làm bài tập kèm giải thích. Tích “Đã học” để theo dõi tiến độ.</p>
+<div class="card"><h3>Đã học ${nd}/${G.length} bài</h3><div class="bar"><i style="width:${nd / G.length * 100}%"></i></div></div>`
+        + G.map((g, i) => `<div class="card row" style="justify-content:space-between"><div><b>${i + 1}. ${g[0]}</b>${dn[mode + i] ? ' ✓' : ''}<div class="mut" style="font-size:13px">${g[3].length} câu bài tập</div></div><button class="btn p" data-gl="${i}">${dn[mode + i] ? 'Ôn lại' : 'Học'}</button></div>`).join('');
+      const g = G[gl], k = 'g' + mode + gl;
+      return `<button class="btn" id="gback">← Danh sách bài</button><h2 style="margin-top:12px">${gl + 1}. ${g[0]}</h2>
+<div class="card">${g[1]}<h3 style="margin-top:12px">Ví dụ</h3>${g[2].map((x, i) => `<p style="margin:6px 0"><button class="sp" data-gs="${i}" aria-label="Đọc ví dụ">🔊</button> <b>${esc(x[0])}</b><br><span class="mut">${esc(x[1])}</span></p>`).join('')}
+<label class="chk"><input type="checkbox" id="gdone" ${dn[mode + gl] ? 'checked' : ''}><span>Đã học xong bài này</span></label></div>
+<h3>Bài tập</h3>${quiz(k, g[3], false)}${gl + 1 < G.length ? '<button class="btn p" id="gnext">Bài tiếp theo →</button>' : ''}`;
+    };
+    I.gram = () => {
+      const v = $('#view'), G = GRAM[mode];
+      if (gl < 0) { v.onclick = e => { const b = e.target.closest('[data-gl]'); if (b) { gl = +b.dataset.gl; go('gram'); window.scrollTo(0, 0) } }; return }
+      const g = G[gl], k = 'g' + mode + gl; bindQuiz(k, g[3], false); const h = v.onclick;
+      v.onclick = e => {
+        if (e.target.closest('#gback')) { gl = -1; go('gram'); window.scrollTo(0, 0); return }
+        if (e.target.closest('#gnext')) { gl++; go('gram'); window.scrollTo(0, 0); return }
+        const s = e.target.closest('[data-gs]'); if (s) { say(g[2][s.dataset.gs][0]); return }
+        h(e)
+      };
+      v.onchange = e => { if (e.target.id === 'gdone') { S.gdone = S.gdone || {}; S.gdone[mode + gl] = e.target.checked; save() } };
     };
 
     /* ---------- VOCAB ---------- */
