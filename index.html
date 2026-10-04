@@ -527,22 +527,60 @@ ${PLAN.map((p, i) => `<div class="card"><h3>${p[0]}</h3>${p[1].map((t, j) => `<l
 <div class="card"><h3>Thói quen mỗi ngày (90 phút)</h3><p style="margin:0">30 phút nghe và shadowing · 30 phút ngữ pháp và đọc · 15 phút từ vựng · 15 phút nói hoặc viết. Đều đặn mỗi ngày hiệu quả hơn học dồn cuối tuần.</p></div>`};
     I.plan = () => { $('#view').onchange = e => { if (e.target.dataset.id) { S.plan = S.plan || {}; S.plan[e.target.dataset.id] = e.target.checked; save(); go('plan') } } };
 
-    /* ---------- QUIZ (listen + read) ---------- */
+    /* ---------- QUIZ (Tối ưu lưu localStorage + Nghe câu + Làm lại) ---------- */
     function quiz(key, data, listen) {
-      const st = S[key] || {};
-      return data.map((q, i) => `<div class="card" data-q="${i}"><div class="row" style="justify-content:space-between"><b>Câu ${i + 1}</b>${listen ? `<button class="btn" data-play="${i}">▶ Nghe câu hỏi</button>` : ''}</div>
-<p>${listen ? `<span class="mut">Nghe rồi chọn câu trả lời phù hợp nhất.</span>` : esc(q[0])}</p>
-${q[1].map((o, j) => `<button class="btn opt" data-q="${key}" data-i="${i}" data-j="${j}">${'ABCD'[j]}. ${esc(o)}</button>`).join('')}<div class="exp" hidden></div></div>`).join('') + `<div class="card"><b class="res" id="${key}Res"></b></div>`
+      const saved = (S.qans && S.qans[key]) || {};
+      const doneCount = Object.keys(saved).length;
+      const correctCount = Object.entries(saved).filter(([i, ansTxt]) => data[i] && data[i][1][data[i][2]] === ansTxt).length;
+      return data.map((q, i) => {
+        const pickedTxt = saved[i];
+        const isDone = pickedTxt !== undefined;
+        const rightTxt = q[1][q[2]];
+        return `<div class="card" data-q="${i}">
+          <div class="row" style="justify-content:space-between">
+            <b>Câu ${i + 1}</b>
+            ${listen ? `<button class="btn" data-play="${i}">▶ Nghe câu hỏi</button>` : `<button class="sp" data-qsay="${esc(q[0].replace(/____/g, rightTxt))}" title="Nghe câu hoàn chỉnh">🔊</button>`}
+          </div>
+          <p>${listen ? `<span class="mut">Nghe rồi chọn câu trả lời phù hợp nhất.</span>` : esc(q[0])}</p>
+          ${q[1].map((o, j) => {
+          let cls = '';
+          if (isDone) {
+            if (o === rightTxt) cls = ' ok';
+            else if (o === pickedTxt) cls = ' no';
+          }
+          return `<button class="btn opt${cls}" data-q="${key}" data-i="${i}" data-j="${j}" ${isDone ? 'disabled' : ''}>${'ABCD'[j]}.${esc(o)}</button>`;
+        }).join('')}
+          <div class="exp" ${isDone ? '' : 'hidden'}>${isDone ? (listen ? 'Bản gốc: “' + q[0] + '” — ' : '') + q[3] : ''}</div>
+        </div>`;
+      }).join('') + `<div class="card row" style="justify-content:space-between">
+        <b class="res" id="${key}Res">${doneCount ? `Đúng ${correctCount}/${doneCount} câu đã làm` + (doneCount === data.length ? (correctCount >= data.length * .85 ? ' — Rất tốt, đúng tiêu chuẩn 900+!' : ' — Xem lại phần giải thích để rút kinh nghiệm.') : '') : 'Hãy chọn đáp án để bắt đầu.'}</b>
+        ${doneCount ? `<button class="btn" data-qreset="${key}">Làm lại bài này</button>` : ''}
+      </div>`;
     }
     function bindQuiz(key, data, listen) {
-      const done = {}; const v = $('#view');
+      const v = $('#view');
       v.onclick = e => {
-        const pl = e.target.closest('[data-play]'); if (pl) { const q = data[pl.dataset.play]; sayList([q[0], 'A. ' + q[1][0], 'B. ' + q[1][1], 'C. ' + q[1][2]]); return }
-        const b = e.target.closest('.opt'); if (!b || b.dataset.q !== key) return; const i = +b.dataset.i, j = +b.dataset.j; if (done[i] !== undefined) return; done[i] = j === data[i][2];
-        const card = b.closest('.card'); card.querySelectorAll('.opt').forEach((o, k) => { if (k === data[i][2]) o.classList.add('ok'); else if (k === j) o.classList.add('no') });
-        const ex = card.querySelector('.exp'); ex.hidden = false; ex.textContent = (listen ? 'Bản gốc: “' + data[i][0] + '” — ' : '') + data[i][3];
-        const c = Object.values(done).filter(Boolean).length; $('#' + key + 'Res').textContent = `Đúng ${c}/${Object.keys(done).length} câu đã làm` + (Object.keys(done).length === data.length ? (c >= data.length * .85 ? ' — Rất tốt, đúng tiêu chuẩn 900+!' : ' — Xem lại phần giải thích để rút kinh nghiệm.') : '')
-      }
+        const pl = e.target.closest('[data-play]');
+        if (pl) { const q = data[pl.dataset.play]; sayList([q[0], 'A. ' + q[1][0], 'B. ' + q[1][1], 'C. ' + q[1][2]]); return; }
+        const qs = e.target.closest('[data-qsay]');
+        if (qs) { say(qs.dataset.qsay); return; }
+        const rs = e.target.closest('[data-qreset]');
+        if (rs && rs.dataset.qreset === key) {
+          if (S.qans) delete S.qans[key];
+          save();
+          go(curTab);
+          return;
+        }
+        const b = e.target.closest('.opt');
+        if (!b || b.dataset.q !== key) return;
+        const i = +b.dataset.i, j = +b.dataset.j;
+        S.qans = S.qans || {};
+        S.qans[key] = S.qans[key] || {};
+        if (S.qans[key][i] !== undefined) return;
+        S.qans[key][i] = data[i][1][j];
+        save();
+        go(curTab);
+      };
     }
     V.listen = () => `<h2>Luyện nghe</h2><p class="mut">Mô phỏng TOEIC Part 2 (hỏi – đáp). Giọng đọc do trình duyệt tạo, nên bạn nên bổ sung audio thật khi luyện đề.</p>
 <div class="card row"><label for="rate">Tốc độ đọc</label><input id="rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.rate || 0.95}"><span class="mut" id="rv">${S.rate || 0.95}x</span></div>${quiz('l', PART2, true)}
@@ -736,7 +774,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
     const tip = (i, text, label) => { GRAM.toeic[i][1] += `<div class="exp" style="margin-top:8px">💡 <b>${label || 'Mẹo làm bài'}:</b> ${text}</div>` };
     Object.values(GRAM).forEach(L => L.forEach(g => { g[1] = HDR + g[1] }));
 
-    // Bài 1: Các Thì & Phối thì (viết lại theo nội dung chuẩn TOEIC)
     GRAM.toeic[0][0] = "Các Thì & Phối thì trọng tâm TOEIC";
     GRAM.toeic[0][1] = T("Tập trung vào Hiện tại hoàn thành, Quá khứ đơn, Tương lai hoàn thành và quy tắc phối thì với mệnh đề thời gian.", [
       "<b>Hiện tại hoàn thành</b> (have/has + V3/ed): đi với <i>since</i> + mốc quá khứ, <i>for</i> + khoảng thời gian, <i>recently, lately, so far, over the past/last</i> + số năm.",
@@ -750,7 +787,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       ["We will begin the training as soon as the new software ____ installed.", ["will be", "would be", "was", "is"], 3, "Sau as soon as dùng hiện tại đơn, không dùng will."],
       ["Sales ____ strongly so far this quarter.", ["grow", "grew", "have grown", "will grow"], 2, "so far → hiện tại hoàn thành."]);
 
-    // Bài 3: Hòa hợp Chủ ngữ – Động từ
     GRAM.toeic[2][0] = "Hòa hợp Chủ ngữ – Động từ (Subject–Verb Agreement)";
     GRAM.toeic[2][1] = T("Xác định đúng chủ ngữ chính (số ít hay số nhiều) khi bị ngăn cách bởi các cụm giới từ hoặc mệnh đề phụ.", [
       "<b>Quy tắc cốt lõi</b>: <i>N1 + giới từ (of, in, with, from, at…) + N2 + V</i> → động từ luôn chia theo N1, bỏ qua cụm giới từ ở giữa.",
@@ -765,7 +801,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       ["Not only the supervisor but also the interns ____ invited to the event.", ["was", "is", "were", "has"], 2, "Chia theo the interns (số nhiều) → were."],
       ["Everyone in the sales team ____ required to attend the workshop.", ["are", "is", "were", "have been"], 1, "Everyone + V số ít."]);
 
-    // Mẹo làm bài cho các bài còn lại
     tip(1, "Thấy <i>yesterday, ago, last + thời gian</i> → quá khứ đơn. Thấy <i>tomorrow, next</i> → will hoặc be going to.", "Dấu hiệu vàng");
     tip(3, "Nhìn từ ngay trước và sau chỗ trống: sau mạo từ/tính từ sở hữu cần <b>danh từ</b>, trước danh từ cần <b>tính từ</b>, bổ nghĩa cho động từ cần <b>trạng từ</b>.");
     tip(4, "Hạn chót → <b>by</b>; kéo dài đến lúc đó → <b>until</b>; theo sau là sự kiện → <b>during</b>; khoảng thời gian → <b>for/within</b>.", "Dấu hiệu vàng");
@@ -784,7 +819,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
     tip(17, "Xác định quan hệ ý của hai câu trước khi chọn: đối lập (however), kết quả (therefore), bổ sung (moreover), điều kiện ngược (otherwise).");
     tip(18, "<i>information, equipment, advice, feedback, furniture</i> không bao giờ có <b>-s</b> hay <b>a/an</b>.", "Dấu hiệu vàng");
 
-    // Bài mới
     GRAM.toeic.push(
       ["Giới từ đi kèm (động từ, tính từ, danh từ + giới từ)", T("Học theo cụm cố định, không học giới từ riêng lẻ.", [
         "<b>Động từ + giới từ</b>: depend on, rely on, apply for, participate in, result in, consist of, refer to, comply with.",
@@ -815,11 +849,9 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
           ["He neither called ____ sent an email to confirm.", ["or", "nor", "and", "but"], 1, "neither … nor …"],
           ["The role involves managing budgets, training staff, and ____ with clients.", ["communicate", "communicating", "communicated", "to communicate"], 1, "Song song: managing, training, communicating (cùng V-ing)."]]]
     );
-    /* ---- Nội dung chuẩn theo tài liệu của bạn: 5 bài còn lại ---- */
-    const R = (i, title, intro, rules, tp, label, ex, qs, extra) => {
+    const R = (i, title, intro, rules, tp, label, ex, qs) => {
       const g = GRAM.toeic[i]; g[0] = title; g[1] = T(intro, rules, tp, label); g[2] = ex; g[3] = g[3].concat(qs);
     };
-    // Từ loại
     R(3, "Từ loại: N, V, Adj, Adv (Parts of Speech)",
       "Nhận diện nhanh Danh từ (N), Động từ (V), Tính từ (Adj), Trạng từ (Adv) dựa vào đuôi từ và vị trí đứng trong câu mà không cần dịch hết nghĩa.", [
       "<b>Danh từ (N)</b>: đứng sau mạo từ (a/an/the), tính từ sở hữu (my, his, their, its), tính từ (Adj + N) hoặc giới từ (in, on, of, for + N). Đuôi thường gặp: <code>-tion, -sion, -ment, -ness, -ity, -ance, -ence</code> (chỉ người: <code>-er, -or, -ist, -ant, -ee</code>).",
@@ -833,7 +865,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       ["We received a ____ response from the client.", ["timely", "timeliness", "time", "timed"], 0, "timely có đuôi -ly nhưng là tính từ, đứng trước danh từ response."],
       ["The board's ____ of the budget came after a long discussion.", ["approve", "approval", "approving", "approved"], 1, "approval có đuôi -al nhưng là danh từ."],
       ["Customer ____ is our top priority.", ["satisfy", "satisfied", "satisfaction", "satisfactory"], 2, "Danh từ ghép customer satisfaction."]]);
-    // Liên từ vs Giới từ
     R(5, "Liên từ vs. Giới từ (Conjunctions vs. Prepositions)",
       "Cùng mang một nghĩa (Bởi vì, Mặc dù, Trong khi) nhưng <b>Liên từ</b> đi với Mệnh đề (S + V), còn <b>Giới từ</b> đi với Cụm danh từ (N / V-ing).", [
       "<b>Nhóm “Mặc dù”</b>:<br>• Liên từ (+ <code>S + V</code>): Although, Even though, Though, While, Whereas<br>• Giới từ (+ <code>N / V-ing</code>): Despite, In spite of, Regardless of",
@@ -847,7 +878,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       ["The event was postponed ____ the weather was bad.", ["because of", "due to", "since", "thanks to"], 2, "Sau chỗ trống là mệnh đề → liên từ Since (= vì)."],
       ["Staff must stay reachable ____ the entire conference.", ["throughout", "while", "whereas", "although"], 0, "Sau chỗ trống là cụm danh từ chỉ thời gian → throughout."],
       ["____ she was on leave, her colleague managed the account.", ["During", "While", "Despite", "Throughout"], 1, "Sau chỗ trống là mệnh đề (she was) → While."]]);
-    // Câu điều kiện
     R(6, "Câu điều kiện & Đảo ngữ (Should / Were / Had)",
       "Nắm vững 3 loại câu điều kiện và đặc biệt là cấu trúc <b>Đảo ngữ bỏ “If”</b> (Should / Were / Had) rất hay gặp ở câu khó Part 5.", [
       "<b>Loại 1</b> (có thật ở hiện tại/tương lai): <code>If + S + V (hiện tại đơn), S + will/can/please + V_inf</code>.<br>→ Đảo ngữ: <code>Should + S + V_inf (nguyên mẫu không chia)…</code>",
@@ -860,7 +890,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       ["____ we known about the delay, we would have rescheduled the meeting.", ["Had", "Should", "Were", "Did"], 0, "Vế sau would have + V3 → loại 3: Had + S + V3."],
       ["If the supplier ____ the order on time, we would have avoided the penalty.", ["delivered", "had delivered", "would deliver", "delivers"], 1, "Vế sau would have + V3 → vế if dùng had + V3."],
       ["____ the item arrive late, please contact us.", ["Should", "Were", "Had", "Does"], 0, "Sau chủ ngữ the item là arrive (nguyên mẫu) → Should."]]);
-    // Mệnh đề quan hệ
     R(7, "Mệnh đề quan hệ & rút gọn (Relative Clauses)",
       "Cách chọn đại từ quan hệ (who, whom, whose, which) và rút gọn mệnh đề quan hệ thành V-ing hoặc V3/ed.", [
       "<b>Who + V</b> (thay cho người, làm chủ ngữ) · <b>Whom + S + V</b> (thay cho người, làm tân ngữ).",
@@ -874,7 +903,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       ["Applications ____ after the deadline will not be considered.", ["receiving", "received", "receive", "are received"], 1, "Sau chỗ trống là giới từ after → V3/ed rút gọn."],
       ["Employees ____ the survey will receive a gift card.", ["completed", "completing", "complete", "completion"], 1, "Sau chỗ trống là tân ngữ the survey → V-ing rút gọn."],
       ["The conference room in ____ the meeting will be held has been renovated.", ["which", "where", "that", "whom"], 0, "Giới từ + which (in which = where)."]]);
-    // Bị động
     R(8, "Câu bị động: Chủ động vs. Bị động (Active vs. Passive)",
       "Phân biệt cực nhanh khi nào chia Chủ động (Active) và khi nào chia Bị động (Passive) cho cả động từ chính lẫn phân từ.", [
       "<b>Công thức chung</b>: <code>be + V3/ed</code> (modal verbs: <code>can/must/should/will + be + V3/ed</code>).",
@@ -888,7 +916,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
       ["The annual meeting will ____ in the main hall on March 3.", ["take place", "be taken place", "taken place", "taking place"], 0, "take place là nội động từ, không chia bị động."],
       ["A security deposit will ____ upon arrival.", ["require", "be required", "requiring", "required"], 1, "Không có tân ngữ, deposit là vật bị yêu cầu → bị động."],
       ["The contract will ____ at the end of this year.", ["expire", "be expired", "expiring", "expired"], 0, "expire là nội động từ."]]);
-    /* ---- Các chủ điểm bổ sung ---- */
     const tipC = (i, text, label) => { GRAM.chat[i][1] += `<div class="exp" style="margin-top:8px">💡 <b>${label || 'Mẹo làm bài'}:</b> ${text}</div>` };
     tipC(0, "Do/Does/Did + chủ ngữ + V nguyên mẫu. Hỏi giờ → When, nơi chốn → Where, người → Who, lý do → Why.");
     tipC(1, "<b>Could</b> lịch sự hơn <b>Can</b>. Xin phép dùng <i>May I…?</i>; đáp lại: <i>Sure, go ahead.</i>");
@@ -1049,14 +1076,22 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
         ["I'm not used to ____ up so early.", ["get", "getting", "got", "to get"], 1, "be used to + V-ing."],
         ["I had my laptop ____ yesterday.", ["fix", "fixing", "fixed", "to fix"], 2, "have + vật + V3."]])
     );
-    // Xáo trộn thứ tự đáp án để vị trí đáp án đúng không đoán được
-    Object.values(GRAM).forEach(L => L.forEach(g => g[3].forEach(q => { const c = q[1][q[2]], o = q[1].map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]); q[1] = o; q[2] = o.indexOf(c) })));
+    // Xáo trộn thứ tự đáp án nhưng vẫn giữ nguyên các lựa chọn đặc biệt như "—" ở cuối
+    Object.values(GRAM).forEach(L => L.forEach(g => g[3].forEach(q => {
+      if (q[1].includes("—")) return;
+      const c = q[1][q[2]], o = q[1].map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+      q[1] = o; q[2] = o.indexOf(c);
+    })));
     let gl = -1;
     V.gram = () => {
       const G = GRAM[mode], dn = S.gdone || {}, nd = G.filter((g, i) => dn[mode + i]).length;
       if (gl < 0) return `<h2>Ngữ pháp ${mode === 'toeic' ? 'TOEIC' : 'giao tiếp'}</h2><p class="mut">Đọc lý thuyết ngắn, xem ví dụ rồi làm bài tập kèm giải thích. Tích “Đã học” để theo dõi tiến độ.</p>
 <div class="card"><h3>Đã học ${nd}/${G.length} bài</h3><div class="bar"><i style="width:${nd / G.length * 100}%"></i></div></div>`
-        + G.map((g, i) => `<div class="card row" style="justify-content:space-between"><div><b>${i + 1}. ${g[0]}</b>${dn[mode + i] ? ' ✓' : ''}<div class="mut" style="font-size:13px">${g[3].length} câu bài tập</div></div><button class="btn p" data-gl="${i}">${dn[mode + i] ? 'Ôn lại' : 'Học'}</button></div>`).join('');
+        + G.map((g, i) => {
+          const sv = (S.qans && S.qans['g' + mode + i]) || {};
+          const doneN = Object.keys(sv).length;
+          return `<div class="card row" style="justify-content:space-between"><div><b>${i + 1}. ${g[0]}</b>${dn[mode + i] ? ' ✓' : ''}<div class="mut" style="font-size:13px">${g[3].length} câu bài tập${doneN ? ` · Đã làm ${doneN}/${g[3].length}` : ''}</div></div><button class="btn p" data-gl="${i}">${dn[mode + i] ? 'Ôn lại' : 'Học'}</button></div>`;
+        }).join('');
       const g = G[gl], k = 'g' + mode + gl;
       return `<button class="btn" id="gback">← Danh sách bài</button><h2 style="margin-top:12px">${gl + 1}. ${g[0]}</h2>
 <div class="card">${g[1]}<h3 style="margin-top:12px">Ví dụ</h3>${g[2].map((x, i) => `<p style="margin:6px 0"><button class="sp" data-gs="${i}" aria-label="Đọc ví dụ">🔊</button> <b>${esc(x[0])}</b><br><span class="mut">${esc(x[1])}</span></p>`).join('')}
@@ -1078,7 +1113,6 @@ ${WRITE.map((w, i) => `<div class="card"><span class="tag">Đề ${i + 1}</span>
 
     /* ---------- VOCAB ---------- */
     const VOCC = [["How's it going?", "dạo này thế nào?", "How's it going? – Pretty good, thanks."], ["I'm running late", "tôi sắp trễ rồi", "Sorry, I'm running late."], ["Could you give me a hand?", "bạn giúp mình một tay được không?", "Could you give me a hand with this bag?"], ["It's up to you", "tùy bạn quyết định", "Where to eat? It's up to you."], ["I'm not sure yet", "mình chưa chắc", "I'm not sure yet, let me think."], ["Sounds good", "nghe hay đấy / được đó", "Dinner at seven? Sounds good."], ["Let's keep in touch", "giữ liên lạc nhé", "It was great to meet you. Let's keep in touch."], ["No worries", "không sao đâu", "Thanks for waiting. – No worries."], ["What do you recommend?", "bạn gợi ý món nào?", "What do you recommend on this menu?"], ["I couldn't catch that", "mình chưa nghe rõ", "Sorry, I couldn't catch that."]];
-    /* thêm từ vựng đầy đủ theo chủ đề */
     VOC.forEach(x => x[3] = 'Từ nền tảng'); VOCC.forEach(x => x[3] = 'Cụm từ nền tảng');
     const add = (L, cat, t) => t.trim().split('\n').forEach(r => { const p = r.split('|'); L.push([p[0], p[1], p[2] || p[0], cat]) });
     add(VOC, 'Nhân sự & Văn phòng', `résumé|sơ yếu lý lịch|Please attach your résumé.
@@ -1396,7 +1430,7 @@ I feel the same|mình cũng thấy vậy`);
     }
     /* ===== loại từ + ví dụ (tạo bằng Gemini API, lưu trong trình duyệt) ===== */
     const CATPOS = { 'Động từ công sở (Part 5)': 'v', 'Động từ nâng cao': 'v', 'Cụm động từ nâng cao': 'phr. v', 'Giới từ & Cụm động từ': 'phr.', 'Trạng từ nâng cao': 'adv', 'Danh từ công sở (Part 5)': 'n', 'Danh từ nâng cao': 'n', 'Từ nối & Liên từ (Part 5–6)': 'conj/prep', 'Liên từ chuyển ý nâng cao': 'conj/adv', 'Tính từ nâng cao': 'adj', 'Tính từ tần suất (Part 5–7)': 'adj', 'Cụm cố định (collocations)': 'phr.' };
-    const WN = { "negotiate": "v", "deadline": "n", "refund": "n", "reimburse": "v", "allocate": "v", "implement": "v/n", "revenue": "n", "candidate": "n", "invoice": "n", "postpone": "v", "mandatory": "adj", "renew": "v", "inventory": "n", "shortage": "n", "subsidiary": "n/adj", "estimate": "v/n", "reliable": "adj", "competitive": "adj", "warranty": "n", "applicant": "n", "recruit": "v/n", "promote": "v", "resign": "v", "retire": "v", "colleague": "n", "supervisor": "n", "payroll": "n", "benefit": "n/v", "orientation": "n", "overtime": "n", "vacancy": "n", "appoint": "v", "evaluate": "v", "personnel": "n", "budget": "n/v", "expense": "n", "profit": "n/v", "loss": "n", "invest": "v", "audit": "n/v", "tax": "n/v", "deposit": "v/n", "balance": "n/v", "installment": "n", "quarterly": "adj", "overdue": "adj", "asset": "n", "fund": "n", "discount": "v/n", "advertise": "v", "promotion": "n", "launch": "v", "brand": "n", "survey": "v/n", "demand": "v/n", "supply": "v/n", "merchandise": "n/v", "retailer": "n", "wholesale": "n", "commission": "n", "feedback": "n", "outlet": "n", "compete": "v", "trend": "n", "loyal": "adj", "contract": "n/v", "agreement": "n", "terms": "n", "clause": "n", "regulation": "n", "policy": "n", "permit": "v", "license": "n/v", "liable": "adj", "obligation": "n", "penalty": "n", "expire": "v", "amend": "v", "confidential": "adj", "authorize": "v", "sign": "v/n", "itinerary": "n", "reservation": "n", "luggage": "n", "departure": "n", "destination": "n", "accommodation": "n", "customs": "n", "delay": "v", "fare": "n/v", "venue": "n", "register": "v", "exhibition": "n", "banquet": "n", "shuttle": "v", "manufacture": "v/n", "assembly": "n", "shipment": "n", "deliver": "v", "warehouse": "n", "defect": "n", "maintenance": "n", "equipment": "n", "supplier": "n", "order": "n/v", "packaging": "n", "durable": "adj", "capacity": "n", "recall": "v", "upgrade": "v", "install": "v", "backup": "n", "password": "n", "network": "n", "attachment": "n", "photocopy": "n", "stationery": "n", "projector": "n", "malfunction": "n", "troubleshoot": "v", "update": "v", "device": "n", "database": "n", "template": "n", "access": "n", "agenda": "n", "minutes": "n", "proposal": "n", "approve": "v", "reschedule": "v", "urgent": "adj", "confirm": "v", "assign": "v", "coordinate": "v", "draft": "v/n", "revise": "v", "submit": "v", "withdraw": "v", "transfer": "v/n", "account": "n", "loan": "n", "mortgage": "n", "credit": "n/v", "premium": "n/adj", "claim": "v/n", "coverage": "n", "policyholder": "n", "statement": "n", "teller": "n", "currency": "n", "collateral": "adj/n", "landlord": "n", "tenant": "n", "lease": "n/v", "rent": "v/n", "property": "n", "renovation": "n", "construction": "n", "contractor": "n", "blueprint": "n/v", "occupancy": "n", "utilities": "n", "vacant": "adj", "premises": "n", "relocate": "v", "zoning": "n", "foundation": "n", "appointment": "n", "prescription": "n", "symptom": "n", "physician": "n", "pharmacy": "n", "checkup": "n", "clinic": "n", "insurance": "n", "dosage": "n", "treatment": "n", "allergy": "n", "vaccination": "n", "recover": "v", "patient": "n", "reserve": "v/n", "appetizer": "n", "beverage": "n", "cuisine": "n", "catering": "v/n", "waiter": "n", "tip": "n/v", "menu": "n", "ingredient": "n", "chef": "n", "complimentary": "adj", "takeout": "n/adj", "specialty": "n", "commute": "v", "detour": "n", "intersection": "n", "pedestrian": "n", "passenger": "n", "vehicle": "n", "toll": "n/v", "route": "n", "platform": "n", "timetable": "n", "freight": "n", "cargo": "n", "renewable": "adj", "solar": "adj", "recycle": "v", "pollution": "n", "conserve": "v/n", "emission": "n", "sustainable": "adj", "waste": "v/n", "efficiency": "n", "fuel": "n/v", "climate": "n", "resource": "n", "consumption": "n", "curriculum": "n", "enroll": "v", "tuition": "n", "scholarship": "n", "seminar": "n", "workshop": "n", "certificate": "n", "instructor": "n", "faculty": "n", "graduate": "v/n", "qualification": "n", "assignment": "n", "lecture": "n/v", "mentor": "n", "however": "adv", "therefore": "adv", "moreover": "adv", "nevertheless": "adv", "meanwhile": "adv", "otherwise": "adv", "furthermore": "adv", "consequently": "adv", "instead": "adv", "affect": "v", "effect": "n", "economic": "adj", "economical": "adj", "principal": "adj/n", "principle": "n", "accept": "v", "except": "v", "advice": "n", "advise": "v", "later": "adv", "latter": "adj", "lose": "v", "loose": "adj/v", "raise": "v", "rise": "v", "lend": "v", "borrow": "v", "considerable": "adj", "considerate": "adj", "compliment": "n/v", "complement": "n", "efficient": "adj", "substantial": "adj", "approximately": "adv", "promptly": "adv", "effectively": "adv", "immediately": "adv", "currently": "adv", "recently": "adv", "temporarily": "adv", "thoroughly": "adv", "potential": "adj/n", "adequate": "adj", "flexible": "adj", "accurate": "adj", "reasonable": "adj", "available": "adj", "appropriate": "adj/v", "consistent": "adj", "extensive": "adj", "innovative": "adj", "sufficient": "adj", "enclosed": "v", "inquire": "v", "regarding": "v", "sincerely": "adv", "notify": "v", "acknowledge": "v", "inconvenience": "n", "assistance": "n", "courtesy": "n", "correspondence": "n", "recipient": "n", "forward": "adv", "reply": "v/n", "enclosure": "n", "exclusive": "adj", "bargain": "n/v", "coupon": "n", "voucher": "n", "membership": "n", "subscription": "n", "newsletter": "n", "brochure": "n", "catalog": "n", "flyer": "n", "testimonial": "n", "announcement": "n", "complaint": "n", "compensation": "n", "courteous": "adj", "satisfaction": "n", "resolve": "v", "inquiry": "n", "replace": "v", "exchange": "n/v", "receipt": "n", "return": "v/n", "damaged": "v/adj", "defective": "adj", "apologize": "v", "representative": "n", "strategy": "n", "objective": "n", "initiative": "n", "merger": "n", "acquisition": "n", "restructure": "v", "expand": "v", "downsize": "v", "outsource": "v", "stakeholder": "n", "shareholder": "n", "executive": "n/adj", "headquarters": "n", "branch": "n", "department": "n", "cubicle": "n", "supplies": "n", "shred": "n/v", "photocopier": "n", "reception": "n", "lobby": "n", "elevator": "n", "courier": "n", "storage": "n", "cabinet": "n", "stapler": "n", "significant": "adj", "remarkable": "adj", "tentative": "adj", "preliminary": "adj", "comprehensive": "adj", "ongoing": "adj", "upcoming": "adj", "previous": "adj", "former": "adj", "prospective": "adj", "outstanding": "adj", "valid": "adj", "optional": "adj", "accessible": "adj", "convenient": "adj", "acquire": "v", "accomplish": "v", "achieve": "v", "adjust": "v", "anticipate": "v", "arrange": "v", "assess": "v", "attract": "v", "collaborate": "v", "conduct": "v", "contribute": "v", "demonstrate": "v", "distribute": "v", "enhance": "v", "ensure": "v", "facilitate": "v", "generate": "v", "indicate": "v", "maintain": "v", "oversee": "v", "perform": "v", "require": "v", "specify": "v", "utilize": "v", "undertake": "v", "expertise": "n", "procedure": "n", "requirement": "n", "attendance": "n", "accomplishment": "n", "expansion": "n", "enrollment": "n", "installation": "n", "supervision": "n", "leadership": "n", "reputation": "n", "impression": "n", "priority": "n", "workload": "n", "incentive": "n", "productivity": "n", "annually": "adv", "monthly": "n", "biweekly": "adj/n", "shortly": "adv", "formerly": "adv", "subsequent": "adj", "throughout": "adv", "within": "adv", "purchase": "v/n", "vendor": "n", "cashier": "n/v", "checkout": "n", "aisle": "n", "display": "v", "bulk": "n/v", "shelf": "n", "clearance": "n", "export": "v/n", "import": "n/v", "tariff": "n", "trade": "n/v", "shipping": "n", "container": "n", "port": "n", "quota": "n", "distributor": "n", "logistics": "n", "perishable": "n", "fragile": "adj", "consignment": "n", "domestic": "adj", "overseas": "adv/adj", "prototype": "n", "machinery": "n", "assemble": "v", "calibrate": "v", "inspect": "v", "specification": "n", "component": "n", "output": "n", "automation": "n", "hazard": "n", "overhaul": "v", "evacuate": "v", "campaign": "n/v", "slogan": "n", "endorsement": "n", "sponsor": "v", "publicity": "n", "demographic": "n", "consumer": "n", "spokesperson": "n", "trademark": "n", "outreach": "n", "dividend": "n", "stock": "n", "portfolio": "n", "equity": "n", "liability": "n", "turnover": "n", "bankruptcy": "n", "forecast": "v", "overhead": "adj/adv", "subsidy": "n", "surplus": "n/adj", "deficit": "n", "probation": "n", "severance": "n", "referral": "n", "reference": "n", "internship": "n", "trainee": "n", "seniority": "n", "workforce": "n", "appraisal": "n", "grievance": "n", "tenure": "n", "shift": "v/n", "freelance": "n", "delegate": "v", "panel": "n/v", "badge": "n", "booth": "n", "exhibitor": "n", "attendee": "n", "plenary": "adj", "session": "n", "presenter": "n", "handout": "n", "proceedings": "n", "keynote": "v/n", "poster": "n", "suite": "n", "concierge": "n", "amenities": "n", "housekeeping": "n", "rate": "n", "layover": "n", "sightseeing": "n", "cancellation": "n", "lawsuit": "n", "plaintiff": "n", "defendant": "n", "settlement": "n", "jurisdiction": "n", "patent": "n", "copyright": "n", "infringement": "n", "testimony": "n", "attorney": "n", "witness": "v/n", "verdict": "n", "compliance": "n", "violation": "n", "software": "n", "hardware": "n", "firewall": "n", "server": "n", "cloud": "n", "bandwidth": "n", "download": "v", "upload": "v", "wireless": "n", "encryption": "n", "spam": "n/v", "bug": "n/v", "patch": "n", "interface": "n", "publish": "v", "edition": "n", "editor": "n", "journalist": "n", "broadcast": "n/v", "headline": "n/v", "article": "n", "reporter": "n", "column": "n", "circulation": "n", "review": "v/n", "audience": "n", "premiere": "n", "rehearsal": "n", "gallery": "n", "artwork": "n", "performance": "n", "appliance": "n", "furniture": "n", "apparel": "n", "fabric": "n", "cosmetics": "n", "grocery": "n", "produce": "v", "label": "v/n", "secondhand": "adj/adv", "refurbished": "v", "fixture": "n", "accommodate": "v", "advocate": "v", "circulate": "v", "clarify": "v", "compile": "v", "comprise": "v", "convene": "v", "designate": "v", "discontinue": "v", "dispatch": "v/n", "disclose": "v", "eliminate": "v", "endorse": "v", "exceed": "v", "expedite": "v", "finalize": "v", "incur": "v", "initiate": "v", "integrate": "v", "monitor": "v", "prioritize": "v", "reinforce": "v", "restore": "v", "retain": "v", "streamline": "v", "withhold": "v", "affordable": "adj", "ambitious": "adj", "beneficial": "adj", "capable": "adj", "cautious": "adj/n", "cooperative": "adj/n", "diligent": "adj", "eligible": "adj", "enthusiastic": "adj", "feasible": "adj", "hazardous": "adj", "imminent": "adj", "mutual": "adj", "notable": "adj", "obsolete": "adj", "punctual": "adj", "rigorous": "adj", "sturdy": "adj", "versatile": "adj", "widespread": "adj", "thorough": "adj", "accordingly": "adv", "additionally": "adv", "alternatively": "adv", "briefly": "adv", "closely": "adv", "collectively": "adv", "comparatively": "adv", "conveniently": "adv", "drastically": "adv", "entirely": "adv", "eventually": "adv", "exclusively": "adv", "gradually": "adv", "increasingly": "adv", "markedly": "adv", "merely": "adv", "notably": "adv", "occasionally": "adv", "previously": "adv", "primarily": "adv", "rarely": "adv", "relatively": "adv", "steadily": "adv", "strictly": "adv", "advantage": "n", "aspect": "n", "authority": "n", "challenge": "v/n", "circumstance": "n", "commitment": "n", "concern": "v/n", "convenience": "n", "criterion": "n", "dispute": "v/n", "enhancement": "n", "expectation": "n", "fluctuation": "n", "guideline": "n", "hardship": "n", "implication": "n", "milestone": "n", "outcome": "n", "overview": "n", "preference": "n", "prospect": "n", "reimbursement": "n", "safeguard": "v/n", "setback": "n", "threshold": "n", "transition": "n", "voicemail": "n", "extension": "n", "operator": "n", "dial": "v/n", "directory": "n", "reach": "v", "boarding": "n", "gate": "n", "announce": "v", "shoppers": "n", "notice": "v/n", "cooperation": "n", "listeners": "n", "host": "n", "suggest": "v", "objection": "n", "consensus": "n", "vote": "v/n", "motion": "n", "adjourn": "v", "quorum": "n", "brainstorm": "n", "outline": "v/n", "summarize": "v", "parcel": "n/v", "express": "v", "signature": "n", "restock": "v", "repair": "v/n", "leak": "n/v", "broken": "adj", "faulty": "adj", "plumber": "n", "electrician": "n", "technician": "n", "inspection": "n", "routine": "n", "clogged": "adj/v", "fix": "v", "handyman": "n", "skill": "n", "certification": "n", "advancement": "n", "competence": "n", "proficiency": "n", "fluency": "n", "aptitude": "n", "statistics": "n", "figure": "n", "chart": "n/v", "graph": "n", "percentage": "n", "average": "adj/v", "majority": "n", "minority": "n", "respondent": "n/adj", "sample": "n", "data": "n", "peak": "n", "decline": "v/n", "surge": "v/n", "plunge": "v", "steady": "adj/v", "procurement": "n", "bid": "v", "tender": "adj", "quotation": "n", "ceremony": "n", "award": "n", "honor": "v/n", "anniversary": "n", "fundraiser": "n", "charity": "n", "donation": "n", "volunteer": "v/n", "speech": "n", "toast": "v/n", "farewell": "n", "celebrate": "v", "commemorate": "v", "gala": "n", "opening": "n/adj", "preferred": "adj/v", "salary": "n", "relocation": "n", "remote": "adj", "hybrid": "n", "shortlist": "n", "seasonal": "adj", "position": "n", "corridor": "n", "stairway": "n", "floor": "n", "wing": "n", "entrance": "n", "exit": "n", "basement": "n", "rooftop": "n", "courtyard": "n", "facility": "n", "restroom": "n", "auditorium": "n", "cafeteria": "n", "lounge": "v", "lightweight": "n/adj", "portable": "adj", "compact": "adj/n", "waterproof": "adj", "adjustable": "adj", "ergonomic": "adj", "authentic": "adj", "sleek": "adj/v", "similarly": "adv", "likewise": "adv" };
+    const WN = { "negotiate": "v", "deadline": "n", "refund": "n", "reimburse": "v", "allocate": "v", "implement": "v/n", "revenue": "n", "candidate": "n", "invoice": "n", "postpone": "v", "mandatory": "adj", "renew": "v", "inventory": "n", "shortage": "n", "subsidiary": "n/adj", "estimate": "v/n", "reliable": "adj", "competitive": "adj", "warranty": "n", "applicant": "n", "recruit": "v/n", "promote": "v", "resign": "v", "retire": "v", "colleague": "n", "supervisor": "n", "payroll": "n", "benefit": "n/v", "orientation": "n", "overtime": "n", "vacancy": "n", "appoint": "v", "evaluate": "v", "personnel": "n", "budget": "n/v", "expense": "n", "profit": "n/v", "loss": "n", "invest": "v", "audit": "n/v", "tax": "n/v", "deposit": "v/n", "balance": "n/v", "installment": "n", "quarterly": "adj", "overdue": "adj", "asset": "n", "fund": "n", "discount": "v/n", "advertise": "v", "promotion": "n", "launch": "v", "brand": "n", "survey": "v/n", "demand": "v/n", "supply": "v/n", "merchandise": "n/v", "retailer": "n", "wholesale": "n", "commission": "n", "feedback": "n", "outlet": "n", "compete": "v", "trend": "n", "loyal": "adj", "contract": "n/v", "agreement": "n", "terms": "n", "clause": "n", "regulation": "n", "policy": "n", "permit": "v", "license": "n/v", "liable": "adj", "obligation": "n", "penalty": "n", "expire": "v", "amend": "v", "confidential": "adj", "authorize": "v", "sign": "v/n", "itinerary": "n", "reservation": "n", "luggage": "n", "departure": "n", "destination": "n", "accommodation": "n", "customs": "n", "delay": "v", "fare": "n/v", "venue": "n", "register": "v", "exhibition": "n", "banquet": "n", "shuttle": "v", "manufacture": "v/n", "assembly": "n", "shipment": "n", "deliver": "v", "warehouse": "n", "defect": "n", "maintenance": "n", "equipment": "n", "supplier": "n", "order": "n/v", "packaging": "n", "durable": "adj", "capacity": "n", "recall": "v", "upgrade": "v", "install": "v", "backup": "n", "password": "n", "network": "n", "attachment": "n", "photocopy": "n", "stationery": "n", "projector": "n", "malfunction": "n", "troubleshoot": "v", "update": "v", "device": "n", "database": "n", "template": "n", "access": "n", "agenda": "n", "minutes": "n", "proposal": "n", "approve": "v", "reschedule": "v", "urgent": "adj", "confirm": "v", "assign": "v", "coordinate": "v", "draft": "v/n", "revise": "v", "submit": "v", "withdraw": "v", "transfer": "v/n", "account": "n", "loan": "n", "mortgage": "n", "credit": "n/v", "premium": "n/adj", "claim": "v/n", "coverage": "n", "policyholder": "n", "statement": "n", "teller": "n", "currency": "n", "collateral": "adj/n", "landlord": "n", "tenant": "n", "lease": "n/v", "rent": "v/n", "property": "n", "renovation": "n", "construction": "n", "contractor": "n", "blueprint": "n/v", "occupancy": "n", "utilities": "n", "vacant": "adj", "premises": "n", "relocate": "v", "zoning": "n", "foundation": "n", "appointment": "n", "prescription": "n", "symptom": "n", "physician": "n", "pharmacy": "n", "checkup": "n", "clinic": "n", "insurance": "n", "dosage": "n", "treatment": "n", "allergy": "n", "vaccination": "n", "recover": "v", "patient": "n", "reserve": "v/n", "appetizer": "n", "beverage": "n", "cuisine": "n", "catering": "v/n", "waiter": "n", "tip": "n/v", "menu": "n", "ingredient": "n", "chef": "n", "complimentary": "adj", "takeout": "n/adj", "specialty": "n", "commute": "v", "detour": "n", "intersection": "n", "pedestrian": "n", "passenger": "n", "vehicle": "n", "toll": "n/v", "route": "n", "platform": "n", "timetable": "n", "freight": "n", "cargo": "n", "renewable": "adj", "solar": "adj", "recycle": "v", "pollution": "n", "conserve": "v/n", "emission": "n", "sustainable": "adj", "waste": "v/n", "efficiency": "n", "fuel": "n/v", "climate": "n", "resource": "n", "consumption": "n", "curriculum": "n", "enroll": "v", "tuition": "n", "scholarship": "n", "seminar": "n", "workshop": "n", "certificate": "n", "instructor": "n", "faculty": "n", "graduate": "v/n", "qualification": "n", "assignment": "n", "lecture": "n/v", "mentor": "n", "however": "adv", "therefore": "adv", "moreover": "adv", "nevertheless": "adv", "meanwhile": "adv", "otherwise": "adv", "furthermore": "adv", "consequently": "adv", "instead": "adv", "affect": "v", "effect": "n", "economic": "adj", "economical": "adj", "principal": "adj/n", "principle": "n", "accept": "v", "except": "v", "advice": "n", "advise": "v", "later": "adv", "latter": "adj", "lose": "v", "loose": "adj/v", "raise": "v", "rise": "v", "lend": "v", "borrow": "v", "considerable": "adj", "considerate": "adj", "compliment": "n/v", "complement": "n", "efficient": "adj", "substantial": "adj", "approximately": "adv", "promptly": "adv", "effectively": "adv", "immediately": "adv", "currently": "adv", "recently": "adv", "temporarily": "adv", "thoroughly": "adv", "potential": "adj/n", "adequate": "adj", "flexible": "adj", "accurate": "adj", "reasonable": "adj", "available": "adj", "appropriate": "adj/v", "consistent": "adj", "extensive": "adj", "innovative": "adj", "sufficient": "adj", "enclosed": "v", "inquire": "v", "regarding": "v", "sincerely": "adv", "notify": "v", "acknowledge": "v", "inconvenience": "n", "assistance": "n", "courtesy": "n", "correspondence": "n", "recipient": "n", "forward": "adv", "reply": "v/n", "enclosure": "n", "exclusive": "adj", "bargain": "n/v", "coupon": "n", "voucher": "n", "membership": "n", "subscription": "n", "newsletter": "n", "brochure": "n", "catalog": "n", "flyer": "n", "testimonial": "n", "announcement": "n", "complaint": "n", "compensation": "n", "courteous": "adj", "satisfaction": "n", "resolve": "v", "inquiry": "n", "replace": "v", "exchange": "n/v", "receipt": "n", "return": "v/n", "damaged": "v/adj", "defective": "adj", "apologize": "v", "representative": "n", "strategy": "n", "objective": "n", "initiative": "n", "merger": "n", "acquisition": "n", "restructure": "v", "expand": "v", "downsize": "v", "outsource": "v", "stakeholder": "n", "shareholder": "n", "executive": "n/adj", "headquarters": "n", "branch": "n", "department": "n", "cubicle": "n", "supplies": "n", "shred": "n/v", "photocopier": "n", "reception": "n", "lobby": "n", "elevator": "n", "courier": "n", "storage": "n", "cabinet": "n", "stapler": "n", "significant": "adj", "remarkable": "adj", "tentative": "adj", "preliminary": "adj", "comprehensive": "adj", "ongoing": "adj", "upcoming": "adj", "previous": "adj", "former": "adj", "prospective": "adj", "outstanding": "adj", "valid": "adj", "optional": "adj", "accessible": "adj", "convenient": "adj", "acquire": "v", "accomplish": "v", "achieve": "v", "adjust": "v", "anticipate": "v", "arrange": "v", "assess": "v", "attract": "v", "collaborate": "v", "conduct": "v", "contribute": "v", "demonstrate": "v", "distribute": "v", "enhance": "v", "ensure": "v", "facilitate": "v", "generate": "v", "indicate": "v", "maintain": "v", "oversee": "v", "perform": "v", "require": "v", "specify": "v", "utilize": "v", "undertake": "v", "expertise": "n", "procedure": "n", "requirement": "n", "attendance": "n", "accomplishment": "n", "expansion": "n", "enrollment": "n", "installation": "n", "supervision": "n", "leadership": "n", "reputation": "n", "impression": "n", "priority": "n", "workload": "n", "incentive": "n", "productivity": "n", "annually": "adv", "monthly": "n", "biweekly": "adj/n", "shortly": "adv", "formerly": "adv", "subsequent": "adj", "throughout": "adv", "within": "adv", "purchase": "v/n", "vendor": "n", "cashier": "n/v", "checkout": "n", "aisle": "n", "display": "v", "bulk": "n/v", "shelf": "n", "clearance": "n", "export": "v/n", "import": "n/v", "tariff": "n", "trade": "n/v", "shipping": "n", "container": "n", "port": "n", "quota": "n", "distributor": "n", "logistics": "n", "perishable": "n", "fragile": "adj", "consignment": "n", "domestic": "adj", "overseas": "adv/adj", "prototype": "n", "machinery": "n", "assemble": "v", "calibrate": "v", "inspect": "v", "specification": "n", "component": "n", "output": "n", "automation": "n", "hazard": "n", "overhaul": "v", "evacuate": "v", "campaign": "n/v", "slogan": "n", "endorsement": "n", "sponsor": "v", "publicity": "n", "demographic": "n", "consumer": "n", "spokesperson": "n", "trademark": "n", "outreach": "n", "dividend": "n", "stock": "n", "portfolio": "n", "equity": "n", "liability": "n", "turnover": "n", "bankruptcy": "n", "forecast": "v", "overhead": "adj/adv", "subsidy": "n", "surplus": "n/adj", "deficit": "n", "probation": "n", "severance": "n", "referral": "n", "reference": "n", "internship": "n", "trainee": "n", "seniority": "n", "workforce": "n", "appraisal": "n", "grievance": "n", "tenure": "n", "shift": "v/n", "freelance": "n", "delegate": "v", "panel": "n/v", "badge": "n", "booth": "n", "exhibitor": "n", "attendee": "n", "plenary": "adj", "session": "n", "presenter": "n", "handout": "n", "proceedings": "n", "keynote": "v/n", "poster": "n", "suite": "n", "concierge": "n", "amenities": "n", "housekeeping": "n", "rate": "n", "layover": "n", "sightseeing": "n", "cancellation": "n", "lawsuit": "n", "plaintiff": "n", "defendant": "n", "settlement": "n", "jurisdiction": "n", "patent": "n", "copyright": "n", "infringement": "n", "testimony": "n", "attorney": "n", "witness": "v/n", "verdict": "n", "compliance": "n", "violation": "n", "software": "n", "hardware": "n", "firewall": "n", "server": "n", "cloud": "n", "bandwidth": "n", "download": "v", "upload": "v", "wireless": "n", "encryption": "n", "spam": "n/v", "bug": "n/v", "patch": "n", "interface": "n", "publish": "v", "edition": "n", "editor": "n", "journalist": "n", "broadcast": "n/v", "headline": "n/v", "article": "n", "reporter": "n", "column": "n", "circulation": "n", "review": "v/n", "audience": "n", "premiere": "n", "rehearsal": "n", "gallery": "n", "artwork": "n", "performance": "n", "appliance": "n", "furniture": "n", "apparel": "n", "fabric": "n", "cosmetics": "kɑzˈmɛtɪks", "grocery": "n", "produce": "v", "label": "v/n", "secondhand": "adj/adv", "refurbished": "v", "fixture": "n", "accommodate": "v", "advocate": "v", "circulate": "v", "clarify": "v", "compile": "v", "comprise": "v", "convene": "v", "designate": "v", "discontinue": "v", "dispatch": "v/n", "disclose": "v", "eliminate": "v", "endorse": "v", "exceed": "v", "expedite": "v", "finalize": "v", "incur": "v", "initiate": "v", "integrate": "v", "monitor": "v", "prioritize": "v", "reinforce": "v", "restore": "v", "retain": "v", "streamline": "v", "withhold": "v", "affordable": "adj", "ambitious": "adj", "beneficial": "adj", "capable": "adj", "cautious": "adj/n", "cooperative": "adj/n", "diligent": "adj", "eligible": "adj", "enthusiastic": "adj", "feasible": "adj", "hazardous": "adj", "imminent": "adj", "mutual": "adj", "notable": "adj", "obsolete": "adj", "punctual": "adj", "rigorous": "adj", "sturdy": "adj", "versatile": "adj", "widespread": "adj", "thorough": "adj", "accordingly": "adv", "additionally": "adv", "alternatively": "adv", "briefly": "adv", "closely": "adv", "collectively": "adv", "comparatively": "adv", "conveniently": "adv", "drastically": "adv", "entirely": "adv", "eventually": "adv", "exclusively": "adv", "gradually": "adv", "increasingly": "adv", "markedly": "adv", "merely": "adv", "notably": "adv", "occasionally": "adv", "previously": "adv", "primarily": "adv", "rarely": "adv", "relatively": "adv", "steadily": "adv", "strictly": "adv", "advantage": "n", "aspect": "n", "authority": "n", "challenge": "v/n", "circumstance": "n", "commitment": "n", "concern": "v/n", "convenience": "n", "criterion": "n", "dispute": "v/n", "enhancement": "n", "expectation": "n", "fluctuation": "n", "guideline": "n", "hardship": "n", "implication": "n", "milestone": "n", "outcome": "n", "overview": "n", "preference": "n", "prospect": "n", "reimbursement": "n", "safeguard": "v/n", "setback": "n", "threshold": "n", "transition": "n", "voicemail": "n", "extension": "n", "operator": "n", "dial": "v/n", "directory": "n", "reach": "v", "boarding": "n", "gate": "n", "announce": "v", "shoppers": "n", "notice": "v/n", "cooperation": "n", "listeners": "n", "host": "n", "suggest": "v", "objection": "n", "consensus": "n", "vote": "v/n", "motion": "n", "adjourn": "v", "quorum": "n", "brainstorm": "n", "outline": "v/n", "summarize": "v", "parcel": "n/v", "express": "v", "signature": "n", "restock": "v", "repair": "v/n", "leak": "n/v", "broken": "adj", "faulty": "adj", "plumber": "n", "electrician": "n", "technician": "n", "inspection": "n", "routine": "n", "clogged": "adj/v", "fix": "v", "handyman": "n", "skill": "n", "certification": "n", "advancement": "n", "competence": "n", "proficiency": "n", "fluency": "n", "aptitude": "n", "statistics": "n", "figure": "n", "chart": "n/v", "graph": "n", "percentage": "n", "average": "adj/v", "majority": "n", "minority": "n", "respondent": "n/adj", "sample": "n", "data": "n", "peak": "n", "decline": "v/n", "surge": "v/n", "plunge": "v", "steady": "adj/v", "procurement": "n", "bid": "v", "tender": "adj", "quotation": "n", "ceremony": "n", "award": "n", "honor": "v/n", "anniversary": "n", "fundraiser": "n", "charity": "n", "donation": "n", "volunteer": "v/n", "speech": "n", "toast": "v/n", "farewell": "n", "celebrate": "v", "commemorate": "v", "gala": "n", "opening": "n/adj", "preferred": "adj/v", "salary": "n", "relocation": "n", "remote": "adj", "hybrid": "n", "shortlist": "n", "seasonal": "adj", "position": "n", "corridor": "n", "stairway": "n", "floor": "n", "wing": "n", "entrance": "n", "exit": "n", "basement": "n", "rooftop": "n", "courtyard": "n", "facility": "n", "restroom": "n", "auditorium": "n", "cafeteria": "n", "lounge": "v", "lightweight": "n/adj", "portable": "adj", "compact": "adj/n", "waterproof": "adj", "adjustable": "adj", "ergonomic": "adj", "authentic": "adj", "sleek": "adj/v", "similarly": "adv", "likewise": "adv" };
     function pos0(w) {
       if (mode === 'chat') return 'cụm từ'; if (CATPOS[w[3]]) return CATPOS[w[3]]; const t = w[0]; if (WN[t]) return WN[t]; if (!/^[a-z]+$/.test(t)) return '';
       if (/ly$/.test(t) && !/^(assembly|supply|apply|reply|rely|family)$/.test(t)) return 'adv';
@@ -1407,17 +1441,6 @@ I feel the same|mình cũng thấy vậy`);
       if (/(ous|ful|ible|able)$/.test(t)) return 'adj'; return ''
     }
     let E = {}, vErr = '', curTab = ''; try { E = JSON.parse(localStorage.getItem('eng900_ex') || '{}') } catch (e) { }
-    let DB = null, UID = '';
-    const shard = k => { let h = 0; const p = k.split('|'); for (const c of (p[1] || '')) h = (h * 31 + c.charCodeAt(0)) % 6; return p[0] + '_' + h };
-    const dbPath = sh => 'data/users/' + UID + '/ex_' + sh;
-    async function dbSave(keys) { if (!DB) return; for (const sh of [...new Set(keys.map(shard))]) { const m = {}; Object.keys(E).forEach(k => { if (shard(k) === sh) m[k] = E[k] }); try { await DB.doc(dbPath(sh)).set({ m }) } catch (e) { } } }
-    async function dbInit() {
-      try {
-        const db = await claude.use('db'), us = await claude.use('user'); if (!db || !us) return; const id = await us.id(); if (!id) return; DB = db; UID = id; let got = 0;
-        for (const mm of ['toeic', 'chat']) for (let h = 0; h < 6; h++) { try { const sn = await DB.doc(dbPath(mm + '_' + h)).get(); if (sn.exists) { const m = (sn.data() || {}).m || {}; Object.keys(m).forEach(k => { if (!E[k]) E[k] = m[k]; got++ }) } } catch (e) { } }
-        saveE(); if (Object.keys(E).length > got) dbSave(Object.keys(E)); if (curTab === 'vocab' && vview !== 'quiz') go('vocab'); else setMsg(vstat())
-      } catch (e) { }
-    }
     const saveE = () => { try { localStorage.setItem('eng900_ex', JSON.stringify(E)) } catch (e) { } };
     const ek = i => mode + '|' + VL()[i][0], busy = new Set();
     const info = i => { const w = VL()[i], c = E[ek(i)] || {}; return { pos: c.pos || pos0(w), ex: c.ex || w[2] || '', vi: c.vi || '' } };
@@ -1434,7 +1457,7 @@ I feel the same|mình cũng thấy vậy`);
     const posS = i => { const p = info(i).pos; return p ? ' (' + esc(p) + ')' : '' };
     const exS = i => { const x = info(i); return x.ex ? '<br>“' + esc(x.ex) + '”' + (x.vi ? '<br>' + esc(x.vi) : '') : '' };
     const setMsg = t => { const m = $('#vmsg'); if (m) m.textContent = t };
-    const vstat = () => { const idx = IDX(); const c = idx.filter(i => E[ek(i)]).length; return c + '/' + idx.length + ' mục trong danh sách đã có IPA, loại từ và ví dụ' + (busy.size ? ' · đang tạo…' : '') + (vErr ? ' · ' + vErr : '') + (DB ? ' · đã lưu vào tài khoản của bạn' : '') };
+    const vstat = () => { const idx = IDX(); const c = idx.filter(i => E[ek(i)]).length; return c + '/' + idx.length + ' mục trong danh sách đã có IPA, loại từ và ví dụ' + (busy.size ? ' · đang tạo…' : '') + (vErr ? ' · ' + vErr : '') };
     const lineHTML = (i, k) => { const L = VL(), x = info(i); return `<div class="line" data-i="${i}"><div><span class="en"><strong>${esc(L[i][0])}</strong><button class="sp" data-w="${i}" aria-label="Đọc từ">🔊</button>${BAD.test(L[i][0]) ? '' : `<button class="sp" data-m="${i}" aria-label="Đọc thử">🎙</button>`}${ipaB(i)}${x.pos ? ` <i class="mut">(${esc(x.pos)})</i>` : ''} ${k[i] ? '✓' : ''} – ${esc(L[i][1])}</span>${x.ex ? `<span class="vi"><button class="sp" data-e="${i}" aria-label="Đọc ví dụ">🔊</button> “${esc(x.ex)}”${x.vi ? ' — ' + esc(x.vi) : ''}</span>` : ''}<span class="vi" id="lr${i}" aria-live="polite"></span></div></div>` };
     const cardFace = (i, f, n, t) => {
       const w = VL()[i], x = info(i);
@@ -1442,12 +1465,14 @@ I feel the same|mình cũng thấy vậy`);
       return `${esc(w[1])}<small>${x.pos ? '(' + esc(x.pos) + ') ' : ''}${esc(w[0])} ${esc(ipaS(i))}</small>${x.ex ? `<small>“${esc(x.ex)}”</small>${x.vi ? `<small>${esc(x.vi)}</small>` : ''}` : `<small>${busy.size ? 'Đang tạo ví dụ…' : 'Mục này chưa có ví dụ (Bấm ✨ Tạo ví dụ ở trên)'}</small>`}`
     };
 
-    /* ===== Tích hợp Gemini API (Tạo luôn cả Phiên âm IPA + Loại từ + Ví dụ + Dịch nghĩa) ===== */
+    /* ===== Tích hợp Gemini API (Có bộ nhớ đệm cachedModels + Tạo IPA + Loại từ + Ví dụ) ===== */
     const getApiKey = () => S.geminiKey || '';
-    const setApiKey = (k) => { S.geminiKey = k.trim(); save(); };
+    let cachedModels = null;
+    const setApiKey = (k) => { S.geminiKey = k.trim(); cachedModels = null; save(); };
     let isCallingApi = false;
 
     async function getAvailableFlashModels(apiKey) {
+      if (cachedModels && cachedModels.length) return cachedModels;
       try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
         const data = await res.json();
@@ -1456,10 +1481,10 @@ I feel the same|mình cũng thấy vậy`);
             .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
             .map(m => m.name.replace("models/", ""))
             .filter(name => name.includes("flash") || name.includes("gemini"));
-          if (list.length) return list;
+          if (list.length) return (cachedModels = list);
         }
       } catch (e) { }
-      return ["gemini-3.8-flash", "gemini-3.0-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
+      return (cachedModels = ["gemini-3.8-flash", "gemini-3.0-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]);
     }
 
     async function callGemini(promptText) {
@@ -1536,7 +1561,6 @@ I feel the same|mình cũng thấy vậy`);
         ? 'a short, natural everyday spoken line that uses the phrase'
         : 'one natural business-English sentence in TOEIC style (8-15 words) that uses the word';
 
-      // Yêu cầu Gemini trả về thêm trường "ipa" (phiên âm quốc tế chuẩn Mỹ)
       const prompt = `For each item return a JSON array of objects {"w": the item text exactly as given, "ipa": US English IPA transcription without surrounding slashes, "pos": its part of speech in the example using only n, v, adj, adv, prep, conj, phr. v, phr. or n/v, "ex": ${kind}, "vi": the Vietnamese translation of the sentence}. Return only the JSON array. Items: ${items}`;
 
       try {
@@ -1553,7 +1577,6 @@ I feel the same|mình cũng thấy vậy`);
           }
         });
         saveE();
-        dbSave(Object.values(keys));
         vErr = '';
         return true;
       } catch (e) {
@@ -1597,7 +1620,7 @@ I feel the same|mình cũng thấy vậy`);
     }
 
     const micBlocked = () => { try { const p = document.permissionsPolicy || document.featurePolicy; return !!(p && p.allowsFeature && !p.allowsFeature('microphone')) } catch (e) { return false } };
-    const micMsg = er => er === 'not-allowed' || er === 'service-not-allowed' ? (micBlocked() ? '<b>Micro bị chặn bởi khung chứa trang này</b> (trang đang chạy bên trong Claude), không phải do cài đặt của bạn. Hãy dùng bản web riêng (file index.html đăng lên Netlify hoặc GitHub Pages) để ghi âm.' : '<b>Chưa có quyền micro.</b> Bấm biểu tượng ổ khóa cạnh thanh địa chỉ, chọn Micro → Cho phép, rồi tải lại trang. Nếu vẫn bị chặn, có thể trang đang nằm trong khung nhúng của Claude: hãy dùng bản web riêng.') : er === 'no-speech' ? 'Không nghe thấy tiếng. Hãy thử lại và đọc to hơn.' : 'Không ghi âm được, hãy thử lại.';
+    const micMsg = er => er === 'not-allowed' || er === 'service-not-allowed' ? (micBlocked() ? '<b>Micro bị chặn bởi khung chứa trang này</b>, hãy dùng bản web riêng (GitHub Pages) để ghi âm.' : '<b>Chưa có quyền micro.</b> Bấm biểu tượng ổ khóa cạnh thanh địa chỉ, chọn Micro → Cho phép, rồi tải lại trang.') : er === 'no-speech' ? 'Không nghe thấy tiếng. Hãy thử lại và đọc to hơn.' : 'Không ghi âm được, hãy thử lại.';
     let vres = null;
     const nz = t => String(t).toLowerCase().replace(/'/g, '').replace(/[^a-z ]/g, ' ').split(/\s+/).filter(Boolean);
     function recCheck(target, show) {
@@ -1684,7 +1707,6 @@ I feel the same|mình cũng thấy vậy`);
     };
 
     drawModes(); go(MODES[mode].tabs[0][0]);
-    if (window.claude && claude.use) dbInit();
   </script>
 </body>
 
