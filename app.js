@@ -146,17 +146,56 @@ V.gram = () => {
 <label class="chk"><input type="checkbox" id="gdone" ${dn[mode + gl] ? 'checked' : ''}><span>Đã học xong bài này</span></label></div>
 <h3>Bài tập</h3>${quiz(k, g[3], false)}${gl + 1 < G.length ? '<button class="btn p" id="gnext">Bài tiếp theo →</button>' : ''}`;
 };
+let gramScrollY = 0; // Lưu vị trí cuộn của danh sách bài ngữ pháp
+
+const scrollToView = () => {
+  const nav = document.querySelector('nav');
+  const navH = nav ? nav.offsetHeight : 0;
+  const top = $('#view').getBoundingClientRect().top + window.scrollY - navH - 6;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+};
+
 I.gram = () => {
   const v = $('#view'), G = GRAM[mode];
-  if (gl < 0) { v.onclick = e => { const b = e.target.closest('[data-gl]'); if (b) { gl = +b.dataset.gl; go('gram'); window.scrollTo(0, 0) } }; return }
-  const g = G[gl], k = 'g' + mode + gl; bindQuiz(k, g[3], false); const h = v.onclick;
+  if (gl < 0) {
+    v.onclick = e => {
+      const b = e.target.closest('[data-gl]');
+      if (b) {
+        gramScrollY = window.scrollY; // Nhớ vị trí đang đứng ở danh sách
+        gl = +b.dataset.gl;
+        go('gram');
+        scrollToView(); // Nhảy thẳng tới chỗ nút "← Danh sách bài" như ảnh
+      }
+    };
+    return;
+  }
+  const g = G[gl], k = 'g' + mode + gl;
+  bindQuiz(k, g[3], false);
+  const h = v.onclick;
   v.onclick = e => {
-    if (e.target.closest('#gback')) { gl = -1; go('gram'); window.scrollTo(0, 0); return }
-    if (e.target.closest('#gnext')) { gl++; go('gram'); window.scrollTo(0, 0); return }
-    const s = e.target.closest('[data-gs]'); if (s) { say(g[2][s.dataset.gs][0]); return }
-    h(e)
+    if (e.target.closest('#gback')) {
+      gl = -1;
+      go('gram');
+      window.scrollTo({ top: gramScrollY, behavior: 'instant' }); // Trả về đúng chỗ bài vừa bấm
+      return;
+    }
+    if (e.target.closest('#gnext')) {
+      gl++;
+      go('gram');
+      scrollToView(); // Sang bài tiếp theo cũng căn ngay đầu bài học
+      return;
+    }
+    const s = e.target.closest('[data-gs]');
+    if (s) { say(g[2][s.dataset.gs][0]); return; }
+    h(e);
   };
-  v.onchange = e => { if (e.target.id === 'gdone') { S.gdone = S.gdone || {}; S.gdone[mode + gl] = e.target.checked; save() } };
+  v.onchange = e => {
+    if (e.target.id === 'gdone') {
+      S.gdone = S.gdone || {};
+      S.gdone[mode + gl] = e.target.checked;
+      save();
+    }
+  };
 };
 
 /* ---------- VOCAB LOGIC & GEMINI API ---------- */
