@@ -932,53 +932,78 @@ I feel the same|mình cũng thấy vậy`);
       return `${esc(w[1])}<small>${x.pos ? '(' + esc(x.pos) + ') ' : ''}${esc(w[0])} ${esc(ipaS(i))}</small>${x.ex ? `<small>“${esc(x.ex)}”</small>${x.vi ? `<small>${esc(x.vi)}</small>` : ''}` : `<small>${busy.size ? 'Đang tạo ví dụ…' : 'Mục này chưa có ví dụ (Bấm ✨ Tạo ví dụ ở trên)'}</small>`}`
     };
 
-    /* ===== Tích hợp Gemini API (Chỉ tạo khi bấm nút ✨ Tạo ví dụ & loại từ) ===== */
+    /* ===== Tích hợp Gemini API (Tự động nhảy qua model khác ngay khi gặp 429) ===== */
     const getApiKey = () => S.geminiKey || '';
     const setApiKey = (k) => { S.geminiKey = k.trim(); save(); };
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
     let isCallingApi = false;
+
+    async function getAvailableFlashModels(apiKey) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+        const data = await res.json();
+        if (data && Array.isArray(data.models)) {
+          const list = data.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
+            .map(m => m.name.replace("models/", ""))
+            .filter(name => name.includes("flash") || name.includes("gemini"));
+          if (list.length) return list;
+        }
+      } catch (e) { }
+      return ["gemini-3.0-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+    }
 
     async function callGemini(promptText) {
       const apiKey = getApiKey();
       if (!apiKey) throw new Error("Chưa nhập API Key");
 
-      const model = "gemini-3.8-flash";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      // Lấy tất cả các model khả dụng cho Key này
+      const models = await getAvailableFlashModels(apiKey);
+      let lastError = "";
 
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        });
+      // Thử lần lượt từng model, nếu model nào bị 429 (hết quota/limit:0) hoặc 404 thì nhảy ngay sang model kế tiếp, không đứng chờ!
+      for (const model of models) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        try {
+          vErr = `đang gọi model ${model}…`;
+          setMsg(vstat());
 
-        const data = await res.json().catch(() => ({}));
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            })
+          });
 
-        if (res.ok) {
-          let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-          rawText = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-          return JSON.parse(rawText);
-        }
+          const data = await res.json().catch(() => ({}));
 
-        if (res.status === 429 || res.status === 503) {
-          if (attempt < 3) {
-            const waitSec = attempt * 6;
-            vErr = `Server đang bận hoặc chạm giới hạn (${res.status}), tự thử lại sau ${waitSec}s…`;
-            setMsg(vstat());
-            await sleep(waitSec * 1000);
-            continue;
-          } else {
-            throw new Error(`Chạm giới hạn tốc độ miễn phí (${res.status}). Hãy đợi khoảng 30 giây rồi bấm lại nhé!`);
+          if (res.ok) {
+            let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+            rawText = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+            return JSON.parse(rawText);
           }
-        }
 
-        throw new Error(data?.error?.message || `HTTP ${res.status}`);
+          const errMsg = data?.error?.message || `HTTP ${res.status}`;
+          lastError = `[${model}] ${errMsg}`;
+          console.warn("Model thất bại, chuyển sang model khác:", lastError);
+
+          // Nếu lỗi 400/403 do sai API Key thì dừng ngay để báo cho người dùng
+          if (res.status === 400 || res.status === 403) {
+            if (errMsg.toLowerCase().includes("api key") || errMsg.toLowerCase().includes("permission") || errMsg.toLowerCase().includes("referer")) {
+              throw new Error(errMsg);
+            }
+          }
+          // Nếu là 429, 404, 503 -> Tiếp tục vòng lặp thử model tiếp theo ngay lập tức!
+        } catch (err) {
+          lastError = err.message;
+          if (lastError.toLowerCase().includes("api key not valid")) throw err;
+        }
       }
+
+      throw new Error(lastError || "Tất cả các model đều chạm giới hạn 429.");
     }
 
     async function enrich(ids) {
@@ -990,7 +1015,8 @@ I feel the same|mình cũng thấy vậy`);
       if (isCallingApi) return false;
 
       const L = VL(), m = mode;
-      const need = ids.filter(i => !E[ek(i)] && !busy.has(ek(i))).slice(0, 15);
+      // Giảm xuống 6 từ mỗi lần bấm để chạy cực nhanh và tốn ít token nhất
+      const need = ids.filter(i => !E[ek(i)] && !busy.has(ek(i))).slice(0, 6);
       if (!need.length) return true;
 
       isCallingApi = true;
@@ -1021,7 +1047,7 @@ I feel the same|mình cũng thấy vậy`);
         return true;
       } catch (e) {
         console.error("Gemini Error:", e);
-        vErr = e.message || 'Lỗi gọi Gemini API';
+        vErr = 'Chi tiết lỗi: ' + (e.message || 'Không xác định');
         return false;
       } finally {
         isCallingApi = false;
@@ -1034,12 +1060,10 @@ I feel the same|mình cũng thấy vậy`);
       }
     }
 
-    // Không tự động gọi API ngầm khi lật thẻ hoặc chuyển từ
     function prefetch(soft) {
       return;
     }
 
-    // Chỉ gọi API khi người dùng chủ động bấm nút "✨ Tạo ví dụ & loại từ"
     async function genBtn() {
       if (isCallingApi) return;
       let ids = [];
@@ -1047,10 +1071,10 @@ I feel the same|mình cũng thấy vậy`);
         const dk = DECK();
         if (dk.length) {
           const ordered = [...Array(dk.length)].map((_, j) => dk[(vi + j) % dk.length]);
-          ids = ordered.filter(i => !E[ek(i)]).slice(0, 10);
+          ids = ordered.filter(i => !E[ek(i)]).slice(0, 6);
         }
       } else {
-        ids = IDX().filter(i => !E[ek(i)]).slice(0, 15);
+        ids = IDX().filter(i => !E[ek(i)]).slice(0, 6);
       }
       if (!ids.length) {
         vErr = 'Tất cả các từ trong mục này đều đã có ví dụ!';
