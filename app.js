@@ -12,17 +12,56 @@ const MODES = {
   chat: { n: "Tiếng Anh giao tiếp", d: "Hội thoại, mẫu câu, phản xạ nói", tabs: [["chat", "Hội thoại"], ["gram", "Ngữ pháp"], ["speak", "Luyện nói"], ["vocab", "Cụm từ"]] }
 };
 let mode = MODES[S.mode] ? S.mode : 'toeic';
-let curTab = '', gl = -1;
+let curTab = '', gl = typeof S.gl === 'number' ? S.gl : -1, gramScrollY = 0;
+let vi = S.vi || 0, flip = false, vcat = S.vcat || 'all', vview = S.vview || 'card', Q = null, vonly = !!S.vonly;
 const V = {}, I = {};
+
+const scrollToView = () => {
+  const nav = document.querySelector('nav');
+  const navH = nav ? nav.offsetHeight : 0;
+  const top = $('#view').getBoundingClientRect().top + window.scrollY - navH - 6;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+};
 
 function drawModes() {
   document.documentElement.dataset.mode = mode;
   $('#modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button data-m="${k}" aria-pressed="${k === mode}">${m.n}<small>${m.d}</small></button>`).join('');
   $('#tabs').innerHTML = MODES[mode].tabs.map(([k, n]) => `<button role="tab" data-k="${k}">${n}</button>`).join('');
 }
-$('#modes').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.m !== mode) { mode = b.dataset.m; S.mode = mode; save(); vi = 0; flip = false; vcat = 'all'; Q = null; gl = -1; drawModes(); go(MODES[mode].tabs[0][0]) } };
-$('#tabs').onclick = e => { const b = e.target.closest('button'); if (b) go(b.dataset.k) };
-function go(k) { const prev = curTab; curTab = k; if (hasTTS) speechSynthesis.cancel(); const v = $('#view'); v.onclick = v.onchange = v.oninput = null; document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k)); v.innerHTML = V[k](); if (prev !== k) window.scrollTo(0, 0); if (I[k]) I[k]() }
+
+$('#modes').onclick = e => {
+  const b = e.target.closest('button');
+  if (b && b.dataset.m !== mode) {
+    mode = b.dataset.m;
+    S.mode = mode;
+    gl = -1; S.gl = -1;
+    vi = 0; S.vi = 0;
+    flip = false;
+    vcat = 'all'; S.vcat = 'all';
+    Q = null;
+    drawModes();
+    go(MODES[mode].tabs[0][0]);
+  }
+};
+
+$('#tabs').onclick = e => {
+  const b = e.target.closest('button');
+  if (b) go(b.dataset.k);
+};
+
+function go(k) {
+  const prev = curTab;
+  curTab = k;
+  S.tab = k;
+  save();
+  if (hasTTS) speechSynthesis.cancel();
+  const v = $('#view');
+  v.onclick = v.onchange = v.oninput = null;
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
+  v.innerHTML = V[k]();
+  if (prev && prev !== k) window.scrollTo(0, 0);
+  if (I[k]) I[k]();
+}
 
 /* ---------- PLAN ---------- */
 V.plan = () => {
@@ -133,6 +172,7 @@ I.chat = () => {
 /* ---------- GRAMMAR VIEW ---------- */
 V.gram = () => {
   const G = GRAM[mode], dn = S.gdone || {}, nd = G.filter((g, i) => dn[mode + i]).length;
+  if (gl >= G.length) { gl = -1; S.gl = -1; save(); }
   if (gl < 0) return `<h2>Ngữ pháp ${mode === 'toeic' ? 'TOEIC' : 'giao tiếp'}</h2><p class="mut">Đọc lý thuyết ngắn, xem ví dụ rồi làm bài tập kèm giải thích. Tích “Đã học” để theo dõi tiến độ.</p>
 <div class="card"><h3>Đã học ${nd}/${G.length} bài</h3><div class="bar"><i style="width:${nd / G.length * 100}%"></i></div></div>`
     + G.map((g, i) => {
@@ -146,14 +186,6 @@ V.gram = () => {
 <label class="chk"><input type="checkbox" id="gdone" ${dn[mode + gl] ? 'checked' : ''}><span>Đã học xong bài này</span></label></div>
 <h3>Bài tập</h3>${quiz(k, g[3], false)}${gl + 1 < G.length ? '<button class="btn p" id="gnext">Bài tiếp theo →</button>' : ''}`;
 };
-let gramScrollY = 0; // Lưu vị trí cuộn của danh sách bài ngữ pháp
-
-const scrollToView = () => {
-  const nav = document.querySelector('nav');
-  const navH = nav ? nav.offsetHeight : 0;
-  const top = $('#view').getBoundingClientRect().top + window.scrollY - navH - 6;
-  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-};
 
 I.gram = () => {
   const v = $('#view'), G = GRAM[mode];
@@ -161,10 +193,12 @@ I.gram = () => {
     v.onclick = e => {
       const b = e.target.closest('[data-gl]');
       if (b) {
-        gramScrollY = window.scrollY; // Nhớ vị trí đang đứng ở danh sách
+        gramScrollY = window.scrollY;
         gl = +b.dataset.gl;
+        S.gl = gl;
+        save();
         go('gram');
-        scrollToView(); // Nhảy thẳng tới chỗ nút "← Danh sách bài" như ảnh
+        scrollToView();
       }
     };
     return;
@@ -175,14 +209,18 @@ I.gram = () => {
   v.onclick = e => {
     if (e.target.closest('#gback')) {
       gl = -1;
+      S.gl = -1;
+      save();
       go('gram');
-      window.scrollTo({ top: gramScrollY, behavior: 'instant' }); // Trả về đúng chỗ bài vừa bấm
+      window.scrollTo({ top: gramScrollY, behavior: 'instant' });
       return;
     }
     if (e.target.closest('#gnext')) {
       gl++;
+      S.gl = gl;
+      save();
       go('gram');
-      scrollToView(); // Sang bài tiếp theo cũng căn ngay đầu bài học
+      scrollToView();
       return;
     }
     const s = e.target.closest('[data-gs]');
@@ -199,7 +237,6 @@ I.gram = () => {
 };
 
 /* ---------- VOCAB LOGIC & GEMINI API ---------- */
-let vi = 0, flip = false, vcat = 'all', vview = 'card', Q = null, vonly = false;
 const VL = () => mode === 'chat' ? VOCC : VOC, KK = () => 'known_' + mode;
 const IDX = () => VL().map((w, i) => i).filter(i => vcat === 'all' || VL()[i][3] === vcat);
 const DECK = () => { const k = S[KK()] || {}; return vonly ? IDX().filter(i => !k[i]) : IDX() };
@@ -463,8 +500,9 @@ V.vocab = () => {
 };
 
 I.vocab = () => {
-  const L = VL(), idx = IDX(); document.onkeydown = null; $('#vc').onchange = e => { vcat = e.target.value; vi = 0; flip = false; Q = null; go('vocab') };
-  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { vview = b.dataset.v; go('vocab') });
+  const L = VL(), idx = IDX(); document.onkeydown = null;
+  $('#vc').onchange = e => { vcat = e.target.value; S.vcat = vcat; vi = 0; S.vi = 0; flip = false; Q = null; save(); go('vocab') };
+  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { vview = b.dataset.v; S.vview = vview; save(); go('vocab') });
   $('#vg').onclick = genBtn;
   $('#vkeyBtn').onclick = () => { showKeyBox = !showKeyBox; go('vocab') };
   const kbSave = $('#vkeySave'); if (kbSave) kbSave.onclick = () => {
@@ -481,19 +519,22 @@ I.vocab = () => {
   };
   if (vview === 'quiz') return quizBind();
   if (vview === 'list') { $('#vl').onclick = e => { const a = e.target.closest('[data-w]'), b = e.target.closest('[data-e]'), m = e.target.closest('[data-m]'); if (a) say(L[a.dataset.w][0]); else if (b) say(info(+b.dataset.e).ex); else if (m) recCheck(L[m.dataset.m][0], h => { const o = $('#lr' + m.dataset.m); if (o) o.innerHTML = h }) }; return }
-  const dk = DECK(); if (!dk.length) { $('#vo').onclick = () => { vonly = false; go('vocab') }; return }
+  const dk = DECK(); if (!dk.length) { $('#vo').onclick = () => { vonly = false; S.vonly = false; save(); go('vocab') }; return }
   const real = () => dk[vi % dk.length];
-  const step = d => { vi = ((vi % dk.length) + d + dk.length) % dk.length; flip = false; go('vocab') };
-  const mark = v => { S[KK()] = S[KK()] || {}; S[KK()][real()] = v; save(); if (vonly && v) vi = vi % dk.length; else vi = (vi + 1) % dk.length; flip = false; go('vocab') };
-  $('#vonly').onchange = e => { vonly = e.target.checked; vi = 0; flip = false; go('vocab') };
+  const step = d => { vi = ((vi % dk.length) + d + dk.length) % dk.length; S.vi = vi; flip = false; save(); go('vocab') };
+  const mark = v => { S[KK()] = S[KK()] || {}; S[KK()][real()] = v; if (vonly && v) vi = vi % dk.length; else vi = (vi + 1) % dk.length; S.vi = vi; flip = false; save(); go('vocab') };
+  $('#vonly').onchange = e => { vonly = e.target.checked; S.vonly = vonly; vi = 0; S.vi = 0; flip = false; save(); go('vocab') };
   $('#fc').onclick = () => { flip = !flip; go('vocab') }; $('#fc').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip = !flip; go('vocab') } };
   document.onkeydown = e => { if (curTab === 'vocab' && vview === 'card' && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { if (e.key === 'ArrowRight') step(1); else if (e.key === 'ArrowLeft') step(-1) } };
   $('#vpv').onclick = () => step(-1); $('#vnx').onclick = () => step(1);
   $('#vs').onclick = () => say(L[real()][0]); $('#ve').onclick = () => { const x = info(real()).ex; if (x) say(x) };
   const rshow = i => h => { vres = { i, h }; const o = $('#vres'); if (o && real() === i) o.innerHTML = h };
   $('#vm').onclick = () => recCheck(L[real()][0], rshow(real())); $('#vme').onclick = () => { const x = info(real()).ex; if (x) recCheck(x, rshow(real())) }; $('#vn').onclick = () => mark(false); $('#vk').onclick = () => mark(true);
-  $('#vr').onclick = () => { if (confirm('Xóa toàn bộ tiến độ “đã thuộc” của chương trình này?')) { S[KK()] = {}; save(); vi = 0; flip = false; go('vocab') } }
+  $('#vr').onclick = () => { if (confirm('Xóa toàn bộ tiến độ “đã thuộc” của chương trình này?')) { S[KK()] = {}; vi = 0; S.vi = 0; flip = false; save(); go('vocab') } }
 };
 
 drawModes();
-go(MODES[mode].tabs[0][0]);
+const validTabs = MODES[mode].tabs.map(t => t[0]);
+const startTab = validTabs.includes(S.tab) ? S.tab : MODES[mode].tabs[0][0];
+if (gl >= GRAM[mode].length) { gl = -1; S.gl = -1; }
+go(startTab);
