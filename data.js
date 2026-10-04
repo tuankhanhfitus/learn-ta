@@ -212,122 +212,6 @@ const T = (intro, rules, tip, label) => `${intro ? `<p class="mut" style="margin
 const tip = (i, text, label) => { GRAM.toeic[i][1] += `<div class="exp" style="margin-top:8px">💡 <b>${label || 'Mẹo làm bài'}:</b> ${text}</div>` };
 Object.values(GRAM).forEach(L => L.forEach(g => { g[1] = HDR + g[1] }));
 
-/* ========== BỔ SUNG ĐẦY ĐỦ 12 THÌ + CÂU ĐIỀU KIỆN + MỆNH ĐỀ QUAN HỆ ========== */
-const FULL_TENSES_COND_REL = [
-  L("Hệ thống 4 Thì Hiện tại (Đơn · Tiếp diễn · Hoàn thành · HT Tiếp diễn)",
-    "Nắm trọn công thức, cách dùng và dấu hiệu nhận biết của cả 4 thì hiện tại trong TOEIC.", [
-    "<b>1. Hiện tại đơn (Present Simple)</b>: <code>S + V(s/es)</code> · Phủ định/Nghi vấn: <code>do/does + V_inf</code>.<br>• Cách dùng: Thói quen, sự thật hiển nhiên, lịch trình tàu xe/máy bay/hội nghị cố định.<br>• Dấu hiệu: <i>always, usually, often, frequently, every day/week, annually, quarterly, on Mondays</i>.",
-    "<b>2. Hiện tại tiếp diễn (Present Continuous)</b>: <code>am / is / are + V-ing</code>.<br>• Cách dùng: Hành động đang diễn ra ngay lúc nói, hoặc kế hoạch sắp xảy ra trong tương lai gần.<br>• Dấu hiệu: <i>now, right now, at the moment, currently, presently, this week/month</i>.<br>• Lưu ý: Không dùng tiếp diễn với động từ chỉ trạng thái/sở hữu (<i>know, understand, believe, belong, own, have = có, seem, need, prefer</i>).",
-    "<b>3. Hiện tại hoàn thành (Present Perfect)</b>: <code>have / has + V3/ed</code>.<br>• Cách dùng: Việc bắt đầu trong quá khứ kéo dài đến hiện tại, việc vừa mới xảy ra, hoặc trải nghiệm không rõ thời điểm.<br>• Dấu hiệu: <i>since + mốc thời gian, for + khoảng thời gian, already, yet, just, recently, lately, so far, up to now, over/during/in the past (last) + số năm</i>.",
-    "<b>4. Hiện tại hoàn thành tiếp diễn (Present Perfect Continuous)</b>: <code>have / has + been + V-ing</code>.<br>• Cách dùng: Nhấn mạnh tính liên tục của hành động bắt đầu trong quá khứ và vẫn đang tiếp diễn ở hiện tại.<br>• Dấu hiệu: <i>all day, all morning, for three hours, since + mốc thời gian (đi với động từ kéo dài như work, wait, negotiate, rain)</i>."
-  ], "Thấy <code>currently / right now</code> chọn <b>am/is/are + V-ing</b>. Thấy <code>over the past/last + số năm</code> chọn <b>have/has + V3/ed</b> (hoặc <b>have/has been V-ing</b>). Các động từ <i>own, belong, know, have (sở hữu)</i> không bao giờ chia V-ing!", "Mẹo phân biệt nhanh 4 thì hiện tại",
-    [
-      ["The shuttle bus leaves every thirty minutes.", "Xe đưa đón khởi hành mỗi 30 phút (Hiện tại đơn - lịch trình)."],
-      ["Our IT team is currently upgrading the server.", "Đội IT của chúng tôi hiện đang nâng cấp máy chủ (Hiện tại tiếp diễn)."],
-      ["Revenue has increased by 15% over the past two years.", "Doanh thu đã tăng 15% trong 2 năm qua (Hiện tại hoàn thành)."],
-      ["We have been negotiating the contract since 9 A.M.", "Chúng tôi đã và đang đàm phán hợp đồng từ 9 giờ sáng (HTHT tiếp diễn)."]
-    ], [
-    ["The marketing department ____ a survey on customer preferences right now.", ["conducts", "is conducting", "conducted", "has conducted"], 1, "Dấu hiệu 'right now' → Hiện tại tiếp diễn (is conducting)."],
-    ["Ms. Gomez ____ the regional sales team for more than six years.", ["leads", "is leading", "has been leading", "led"], 2, "'for more than six years' nhấn mạnh quá trình liên tục đến hiện tại → Hiện tại hoàn thành tiếp diễn (has been leading)."],
-    ["This warehouse ____ to the Apex Corporation since 2018.", ["belongs", "is belonging", "has belonged", "has been belonging"], 2, "Có 'since 2018' và 'belong' là động từ trạng thái (không chia tiếp diễn) → Hiện tại hoàn thành (has belonged)."],
-    ["The international trade fair ____ place in Frankfurt every October.", ["takes", "is taking", "has taken", "took"], 0, "Dấu hiệu lặp lại định kỳ 'every October' → Hiện tại đơn (takes)."],
-    ["So far this quarter, our branch ____ over 200 new client accounts.", ["opens", "is opening", "has opened", "opened"], 2, "Dấu hiệu 'So far this quarter' (tính đến nay) → Hiện tại hoàn thành (has opened)."],
-    ["We ____ for the supplier's confirmation all morning, but they still haven't replied.", ["wait", "waited", "have been waiting", "are waited"], 2, "'all morning' + hành động kéo dài liên tục → Hiện tại hoàn thành tiếp diễn (have been waiting)."]
-  ]),
-
-  L("Hệ thống 4 Thì Quá khứ (Đơn · Tiếp diễn · Hoàn thành · QKHT Tiếp diễn)",
-    "Phân biệt rạch ròi chuỗi hành động xảy ra trong quá khứ (hành động cắt ngang vs. hành động xảy ra trước).", [
-    "<b>5. Quá khứ đơn (Past Simple)</b>: <code>S + V2/ed</code> · Phủ định/Nghi vấn: <code>did + V_inf</code>.<br>• Cách dùng: Hành động đã xảy ra và chấm dứt hoàn toàn tại một thời điểm xác định trong quá khứ.<br>• Dấu hiệu: <i>yesterday, last week/month/year, ... ago, in + năm quá khứ (in 2020), previously, formerly</i>.",
-    "<b>6. Quá khứ tiếp diễn (Past Continuous)</b>: <code>was / were + V-ing</code>.<br>• Cách dùng: Hành động đang diễn ra tại một thời điểm cụ thể trong quá khứ (<i>at 10 A.M. yesterday</i>), hoặc đang diễn ra thì có hành động khác cắt ngang (<code>While + QK tiếp diễn, QK đơn</code> / <code>QK tiếp diễn + when + QK đơn</code>).",
-    "<b>7. Quá khứ hoàn thành (Past Perfect)</b>: <code>had + V3/ed</code>.<br>• Cách dùng: Hành động xảy ra và hoàn tất <b>trước</b> một thời điểm hoặc một hành động khác trong quá khứ.<br>• Công thức vàng: <code>Before / By the time + S + V2/ed, S + had + V3/ed</code> và <code>After + S + had + V3/ed, S + V2/ed</code>.",
-    "<b>8. Quá khứ hoàn thành tiếp diễn (Past Perfect Continuous)</b>: <code>had + been + V-ing</code>.<br>• Cách dùng: Nhấn mạnh quá trình kéo dài liên tục của một hành động trước khi một hành động quá khứ khác xảy ra.<br>• Dấu hiệu: <i>for + khoảng thời gian + before + mệnh đề quá khứ đơn</i>."
-  ], "Đang làm thì bị cắt ngang → <b>was/were + V-ing</b>. Xảy ra trước một việc trong quá khứ (<i>before / by the time + V2/ed</i>) → <b>had + V3/ed</b> (nếu có thêm <i>for + khoảng thời gian</i> nhấn mạnh quá trình thì chọn <b>had been V-ing</b>).", "Sơ đồ trục thời gian Quá khứ",
-    [
-      ["The firm relocated its headquarters two years ago.", "Công ty đã dời trụ sở chính cách đây 2 năm (Quá khứ đơn)."],
-      ["While I was reviewing the invoice, I noticed an error.", "Trong lúc đang kiểm tra hóa đơn, tôi phát hiện một lỗi (QK tiếp diễn + QK đơn)."],
-      ["By the time the technician arrived, the system had crashed.", "Trước lúc kỹ thuật viên tới, hệ thống đã bị sập (Quá khứ hoàn thành)."],
-      ["He had been working there for ten years before he retired.", "Ông ấy đã làm việc ở đó suốt 10 năm trước khi nghỉ hưu (QKHT tiếp diễn)."]
-    ], [
-    ["Mr. Tanaka ____ as the chief financial officer before he retired last month.", ["serves", "has served", "had served", "will serve"], 2, "Hành động xảy ra trước một hành động quá khứ ('before he retired') → Quá khứ hoàn thành (had served)."],
-    ["While the technicians ____ the new software, the power suddenly went out.", ["install", "installed", "were installing", "have installed"], 2, "Hành động đang diễn ra ('While...') thì hành động khác cắt ngang ('went out') → Quá khứ tiếp diễn (were installing)."],
-    ["The board of directors ____ the merger proposal at yesterday's meeting.", ["approves", "approved", "has approved", "will approve"], 1, "Dấu hiệu 'at yesterday's meeting' → Quá khứ đơn (approved)."],
-    ["The team ____ on the prototype for six months before the project was cancelled.", ["works", "has been working", "had been working", "is working"], 2, "Kéo dài 'for six months' trước một mốc quá khứ ('before the project was cancelled') → QKHT tiếp diễn (had been working)."],
-    ["By the time the fire brigade arrived, the staff ____ the building safely.", ["evacuated", "have evacuated", "had evacuated", "will evacuate"], 2, "'By the time + V2/ed (arrived)' → vế chính chia Quá khứ hoàn thành (had evacuated)."],
-    ["At 3:00 P.M. yesterday, Ms. Lin ____ with potential investors in the conference room.", ["meets", "met", "was meeting", "has met"], 2, "Giờ cụ thể trong quá khứ ('At 3:00 P.M. yesterday') → Quá khứ tiếp diễn (was meeting)."]
-  ]),
-
-  L("Hệ thống 4 Thì Tương lai (Đơn · Tiếp diễn · Hoàn thành · TLHT Tiếp diễn)",
-    "Làm chủ 4 thì tương lai và quy tắc bất di bất dịch trong mệnh đề trạng ngữ chỉ thời gian.", [
-    "<b>9. Tương lai đơn (Future Simple)</b>: <code>will + V_inf</code> (hoặc <code>be going to + V_inf</code> cho kế hoạch đã định).<br>• Cách dùng: Dự đoán, thông báo sự kiện tương lai, lời hứa, quyết định tức thì.<br>• Dấu hiệu: <i>tomorrow, next week/month/year, upcoming, soon, shortly, in the near future</i>.",
-    "<b>10. Tương lai tiếp diễn (Future Continuous)</b>: <code>will + be + V-ing</code>.<br>• Cách dùng: Hành động sẽ đang diễn ra tại một thời điểm cụ thể trong tương lai.<br>• Dấu hiệu: <i>at this time tomorrow, at 9 A.M. next Monday, during the upcoming trip</i>.",
-    "<b>11. Tương lai hoàn thành (Future Perfect)</b>: <code>will + have + V3/ed</code>.<br>• Cách dùng: Hành động sẽ hoàn tất <b>trước</b> một mốc thời gian hoặc một hành động khác trong tương lai.<br>• Dấu hiệu vàng: <code>by + mốc tương lai</code> (<i>by tomorrow, by next June, by the end of this year</i>) hoặc <code>by the time + S + V(hiện tại đơn)</code>.",
-    "<b>12. Tương lai hoàn thành tiếp diễn (Future Perfect Continuous)</b>: <code>will + have + been + V-ing</code>.<br>• Cách dùng: Nhấn mạnh khoảng thời gian một hành động sẽ đã diễn ra liên tục tính đến một mốc trong tương lai.<br>• Công thức: <code>By + mốc tương lai, S + will have been V-ing + for + khoảng thời gian</code>."
-  ], "1) Thấy <code>by + mốc tương lai</code> hoặc <code>by the time + hiện tại đơn</code> → chọn ngay <b>will have + V3/ed</b> (nếu có thêm <i>for + khoảng thời gian</i> nhấn mạnh sự liên tục thì chọn <b>will have been + V-ing</b>). 2) Trong mệnh đề <i>when, while, before, after, as soon as, once, until, by the time</i>: <b>CẤM dùng will</b> (phải dùng Hiện tại đơn).", "Quy tắc vàng Thì tương lai",
-    [
-      ["The new branch will open next month.", "Chi nhánh mới sẽ mở cửa vào tháng tới (Tương lai đơn)."],
-      ["At 10 A.M. tomorrow, I will be presenting the budget.", "Lúc 10 giờ sáng mai, tôi sẽ đang trình bày ngân sách (Tương lai tiếp diễn)."],
-      ["We will have completed the audit by Friday.", "Chúng tôi sẽ hoàn tất đợt kiểm toán trước thứ Sáu (Tương lai hoàn thành)."],
-      ["By next May, she will have been working here for 10 years.", "Tính đến tháng 5 tới, cô ấy sẽ làm việc ở đây tròn 10 năm (TLHT tiếp diễn)."]
-    ], [
-    ["By the end of this fiscal year, the company ____ three new retail outlets.", ["opens", "opened", "will have opened", "has opened"], 2, "Dấu hiệu 'By the end of this fiscal year' (by + mốc tương lai) → Tương lai hoàn thành (will have opened)."],
-    ["At this time tomorrow, the delegates ____ the keynote speech in the main hall.", ["attend", "attended", "will be attending", "have attended"], 2, "Thời điểm cụ thể trong tương lai ('At this time tomorrow') → Tương lai tiếp diễn (will be attending)."],
-    ["By next December, Mr. Saito ____ our Tokyo branch for exactly twenty years.", ["manages", "managed", "will have been managing", "is managing"], 2, "'By next December' (mốc tương lai) + 'for twenty years' (khoảng thời gian liên tục) → TLHT tiếp diễn (will have been managing)."],
-    ["Please wait in the lobby until the receptionist ____ your name.", ["calls", "will call", "called", "would call"], 0, "Sau liên từ thời gian 'until' không dùng will, chia Hiện tại đơn → calls."],
-    ["By the time the new regulations ____ effect, all staff will have completed the training.", ["take", "will take", "took", "have taken"], 0, "Trong mệnh đề 'By the time', động từ chia Hiện tại đơn (take), vế chính chia Tương lai hoàn thành."],
-    ["The keynote speaker ____ at the airport shortly, so please be ready.", ["arrived", "has arrived", "will arrive", "had arrived"], 2, "Dấu hiệu 'shortly' (chẳng bao lâu nữa) → Tương lai đơn (will arrive)."]
-  ]),
-
-  L("Câu điều kiện Toàn diện (Loại 0, 1, 2, 3, Hỗn hợp, Đảo ngữ & Từ thay thế If)",
-    "Tổng hợp toàn bộ các dạng câu điều kiện từ cơ bản đến nâng cao xuất hiện trong đề thi TOEIC.", [
-    "<b>Loại 0 (Sự thật / Quy trình hiển nhiên)</b>: <code>If + S + V(hiện tại đơn), S + V(hiện tại đơn)</code>.<br>VD: <i>If the temperature exceeds 50°C, the machine stops automatically.</i>",
-    "<b>Loại 1 (Có thật ở hiện tại/tương lai)</b>: <code>If + S + V(hiện tại đơn), S + will / can / may / should + V_inf</code> (hoặc câu mệnh lệnh <code>Please + V_inf</code>).<br>• <b>Đảo ngữ Loại 1</b>: <code>Should + S + V_inf (nguyên mẫu không chia), ...</code>",
-    "<b>Loại 2 (Giả định trái với hiện tại)</b>: <code>If + S + V2/ed (to be luôn dùng were), S + would / could + V_inf</code>.<br>• <b>Đảo ngữ Loại 2</b>: <code>Were + S + (not) + Adj/N, ...</code> hoặc <code>Were + S + to V_inf, ...</code>",
-    "<b>Loại 3 (Giả định trái với quá khứ)</b>: <code>If + S + had + V3/ed, S + would / could + have + V3/ed</code>.<br>• <b>Đảo ngữ Loại 3</b>: <code>Had + S + (not) + V3/ed, ...</code>",
-    "<b>Điều kiện Hỗn hợp (Mixed Conditional)</b>: Giả định nguyên nhân trong quá khứ nhưng kết quả ở hiện tại (đi với <i>now, today, currently</i> ở vế sau):<br><code>If + S + had + V3/ed (Loại 3), S + would/could + V_inf (Loại 2) + now/today</code>.",
-    "<b>Các từ thay thế If</b>: <b>Unless</b> (= If... not: trừ khi) · <b>Provided (that) / Providing (that) / As long as / On condition that</b> (= miễn là, với điều kiện là) · <b>In case (+ S + V) / In the event of (+ N)</b> (= phòng khi) · <b>Otherwise</b> (= nếu không thì) · <b>Without / But for + N</b> (= Nếu không có...)."
-  ], "Nhìn vế đã cho để suy ra vế còn lại: 1) Vế chính là <i>Please + V / will + V</i> → vế If chia <b>Hiện tại đơn</b> (Đảo ngữ: <b>Should + S + V_inf</b>). 2) Vế chính là <i>would + V_inf</i> → vế If chia <b>V2/ed / were</b> (nhưng nếu có <i>now/today</i> mà vế If có <i>yesterday/last year</i> thì vế If chia <b>had + V3/ed</b>). 3) Vế chính là <i>would have + V3/ed</i> → vế If chia <b>had + V3/ed</b> (Đảo ngữ: <b>Had + S + V3/ed</b>).", "Bảng công thức đối chiếu 5 giây",
-    [
-      ["Should the package arrive damaged, please notify us immediately.", "Đảo ngữ loại 1: Nếu gói hàng đến bị hư hỏng, xin báo ngay cho chúng tôi."],
-      ["Were the company to relocate, many employees would resign.", "Đảo ngữ loại 2: Nếu công ty dời địa điểm, nhiều nhân viên sẽ nghỉ việc."],
-      ["Had we invested in that software last year, we would save a lot of time now.", "Điều kiện hỗn hợp (Quá khứ → Hiện tại): Nếu năm ngoái đầu tư phần mềm đó, giờ đã tiết kiệm nhiều thời gian."],
-      ["We will sign the lease provided that the landlord lowers the rent.", "Chúng tôi sẽ ký hợp đồng thuê miễn là chủ nhà giảm giá thuê."]
-    ], [
-    ["____ you experience any technical difficulties, please call our support hotline.", ["Should", "Were", "Had", "Unless"], 0, "Đảo ngữ câu điều kiện loại 1 (vế sau là câu mệnh lệnh 'please call'): Should + S + V nguyên mẫu."],
-    ["____ the board to approve the merger, the two firms would combine operations in June.", ["Should", "Were", "Had", "If"], 1, "Cấu trúc 'to approve' + vế sau 'would combine' → Đảo ngữ loại 2: Were + S + to V_inf."],
-    ["____ the contractor followed the blueprint carefully, the building would not have failed the inspection.", ["Should", "Were", "Had", "Unless"], 2, "Vế chính có 'would not have failed' (Loại 3) → Đảo ngữ loại 3: Had + S + V3/ed."],
-    ["If we had signed the contract last month, the project ____ underway now.", ["is", "will be", "would be", "would have been"], 2, "Điều kiện hỗn hợp: Vế If ở quá khứ ('last month' - had signed), vế chính có 'now' (hiện tại) → dùng 'would + V_inf' (would be)."],
-    ["The bank will approve the loan ____ the applicant provides sufficient collateral.", ["unless", "provided that", "in case of", "despite"], 1, "'provided that' + mệnh đề = miễn là / với điều kiện là."],
-    ["____ the generous sponsorship from local businesses, the charity gala would not have succeeded.", ["Unless", "If", "Without", "Provided"], 2, "Sau chỗ trống là cụm danh từ ('the generous sponsorship...') và vế chính ở điều kiện loại 3 → dùng giới từ 'Without' (= If it had not been for)."]
-  ]),
-
-  L("Mệnh đề quan hệ Toàn diện (Đại từ, Trạng từ, Giới từ & 3 Dạng Rút gọn)",
-    "Nắm trọn mọi quy tắc về Đại từ quan hệ, Trạng từ quan hệ, Giới từ + which/whom và 3 cách rút gọn mệnh đề quan hệ.", [
-    "<b>1. Đại từ quan hệ cơ bản</b>:<br>• Chỉ người: <b>who + V / S + V</b> (chủ ngữ) · <b>whom + S + V</b> (tân ngữ).<br>• Chỉ vật/sự việc: <b>which + V / S + V</b>.<br>• Thay thế cho cả người và vật (trong MĐQH xác định, <b>không</b> đứng sau dấu phẩy hoặc giới từ): <b>that</b>.<br>• Chỉ sở hữu (cho cả người và vật, theo sau bắt buộc là Danh từ không có mạo từ): <b>whose + N</b>.",
-    "<b>2. Trạng từ quan hệ & Giới từ + Đại từ quan hệ</b>:<br>• Nơi chốn: <b>where</b> (= <code>in/at/on + which</code>) + S + V (mệnh đề sau <i>where</i> phải đủ chủ ngữ và tân ngữ; nếu thiếu chủ ngữ/tân ngữ thì dùng <i>which</i>).<br>• Thời gian: <b>when</b> (= <code>on/in/at + which</code>) + S + V.<br>• Lý do: <b>why</b> (= <code>for which</code>) + S + V.<br>• Định lượng + giới từ: <code>some / many / most / all / both / neither + of + whom (người) / which (vật)</code>.",
-    "<b>3. Ba cách Rút gọn Mệnh đề quan hệ (Reduced Relative Clauses)</b>:<br>• <b>Dạng 1 – Hiện tại phân từ (V-ing)</b>: Khi động từ mang nghĩa <b>Chủ động</b> (phía sau thường có tân ngữ hoặc trạng từ). VD: <i>Anyone <b>wishing</b> (= who wishes) to attend...</i><br>• <b>Dạng 2 – Quá khứ phân từ (V3/ed)</b>: Khi động từ mang nghĩa <b>Bị động</b> (phía sau thường là giới từ <i>by, in, at, for, to, from</i>). VD: <i>Products <b>made</b> (= which are made) in Japan...</i><br>• <b>Dạng 3 – Động từ nguyên mẫu (to V / to be V3)</b>: Khi danh từ phía trước có số thứ tự (<i>the first, the second, the last</i>), so sánh nhất (<i>the best, the only</i>) hoặc mục đích. VD: <i>She was the first person <b>to arrive</b>.</i>"
-  ], "1) Có <b>dấu phẩy + some/most/all of ___</b> → nhìn danh từ trước dấu phẩy: người chọn <b>whom</b>, vật chọn <b>which</b> (tuyệt đối không chọn <i>them/they/who</i> vì không có liên từ <i>and</i>). 2) Giữa <b>which</b> và <b>where</b> sau danh từ chỉ địa điểm: nếu ngay sau chỗ trống là Động từ (thiếu chủ ngữ) → chọn <b>which</b>; nếu sau chỗ trống là S + V đầy đủ → chọn <b>where</b> (hoặc <b>in which</b>).", "Bẫy phân biệt nâng cao 900+",
-    [
-      ["The hotel where (= at which) the seminar was held is near the station.", "Khách sạn nơi hội thảo được tổ chức nằm gần nhà ga."],
-      ["We interviewed ten candidates, three of whom were hired.", "Chúng tôi phỏng vấn 10 ứng viên, 3 người trong số đó đã được tuyển."],
-      ["Passengers traveling with young children may board first.", "Hành khách đi cùng trẻ nhỏ có thể lên máy bay trước (Rút gọn chủ động V-ing)."],
-      ["Ms. Tran was the only applicant to meet all the requirements.", "Cô Trần là ứng viên duy nhất đáp ứng mọi yêu cầu (Rút gọn to-V sau the only)."]
-    ], [
-    ["The factory ____ we visited last week uses state-of-the-art solar panels.", ["where", "which", "in which", "whose"], 1, "Động từ 'visited' là ngoại động từ đang thiếu tân ngữ (visit the factory) → dùng đại từ 'which' (không dùng 'where')."],
-    ["The convention center ____ the annual tech expo takes place can hold 5,000 attendees.", ["which", "where", "whom", "whose"], 1, "Mệnh đề sau 'the annual tech expo takes place' đã đủ S + V nội động từ, cần trạng từ chỉ nơi chốn → where (= at which)."],
-    ["The company launched five new products this year, two of ____ have already become bestsellers.", ["them", "they", "which", "that"], 2, "Hai mệnh đề nối bằng dấu phẩy (không có 'and') → cần đại từ quan hệ sau giới từ 'of' chỉ vật ('products') → two of which."],
-    ["Ms. Vo was the first researcher ____ the flaw in the chemical formula.", ["discover", "discovered", "to discover", "discovering"], 2, "Sau cụm có số thứ tự ('the first researcher'), mệnh đề quan hệ rút gọn thành 'to + V_inf' → to discover."],
-    ["All defective items ____ to the warehouse will be replaced free of charge.", ["return", "returning", "returned", "returns"], 2, "Câu đã có động từ chính 'will be replaced'. 'items' bị trả lại + sau chỗ trống là giới từ 'to' → rút gọn bị động dùng V3/ed (returned)."],
-    ["Anyone ____ to register for the orientation session should contact the HR department by noon.", ["wish", "wishes", "wishing", "wished"], 2, "Câu đã có động từ chính 'should contact'. 'Anyone' chủ động muốn đăng ký (who wishes) → rút gọn thành V-ing (wishing)."]
-  ])
-];
-
-// Đưa 5 chuyên đề đầy đủ lên đầu danh sách Ngữ pháp TOEIC và xáo trộn vị trí đáp án
-GRAM.toeic.unshift(...FULL_TENSES_COND_REL);
-FULL_TENSES_COND_REL.forEach(g => g[3].forEach(q => {
-  if (q[1].includes("—")) return;
-  const c = q[1][q[2]], o = q[1].map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
-  q[1] = o; q[2] = o.indexOf(c);
-}));
 GRAM.toeic[0][0] = "Các Thì & Phối thì trọng tâm TOEIC";
 GRAM.toeic[0][1] = T("Tập trung vào Hiện tại hoàn thành, Quá khứ đơn, Tương lai hoàn thành và quy tắc phối thì với mệnh đề thời gian.", [
   "<b>Hiện tại hoàn thành</b> (have/has + V3/ed): đi với <i>since</i> + mốc quá khứ, <i>for</i> + khoảng thời gian, <i>recently, lately, so far, over the past/last</i> + số năm.",
@@ -636,6 +520,117 @@ GRAM.chat.push(
     ["I'm not used to ____ up so early.", ["get", "getting", "got", "to get"], 1, "be used to + V-ing."],
     ["I had my laptop ____ yesterday.", ["fix", "fixing", "fixed", "to fix"], 2, "have + vật + V3."]])
 );
+
+/* ========== BỔ SUNG ĐẦY ĐỦ 12 THÌ + CÂU ĐIỀU KIỆN + MỆNH ĐỀ QUAN HỆ (ĐẶT SAU const L) ========== */
+const FULL_TENSES_COND_REL = [
+  L("Hệ thống 4 Thì Hiện tại (Đơn · Tiếp diễn · Hoàn thành · HT Tiếp diễn)",
+    "Nắm trọn công thức, cách dùng và dấu hiệu nhận biết của cả 4 thì hiện tại trong TOEIC.", [
+    "<b>1. Hiện tại đơn (Present Simple)</b>: <code>S + V(s/es)</code> · Phủ định/Nghi vấn: <code>do/does + V_inf</code>.<br>• Cách dùng: Thói quen, sự thật hiển nhiên, lịch trình tàu xe/máy bay/hội nghị cố định.<br>• Dấu hiệu: <i>always, usually, often, frequently, every day/week, annually, quarterly, on Mondays</i>.",
+    "<b>2. Hiện tại tiếp diễn (Present Continuous)</b>: <code>am / is / are + V-ing</code>.<br>• Cách dùng: Hành động đang diễn ra ngay lúc nói, hoặc kế hoạch sắp xảy ra trong tương lai gần.<br>• Dấu hiệu: <i>now, right now, at the moment, currently, presently, this week/month</i>.<br>• Lưu ý: Không dùng tiếp diễn với động từ chỉ trạng thái/sở hữu (<i>know, understand, believe, belong, own, have = có, seem, need, prefer</i>).",
+    "<b>3. Hiện tại hoàn thành (Present Perfect)</b>: <code>have / has + V3/ed</code>.<br>• Cách dùng: Việc bắt đầu trong quá khứ kéo dài đến hiện tại, việc vừa mới xảy ra, hoặc trải nghiệm không rõ thời điểm.<br>• Dấu hiệu: <i>since + mốc thời gian, for + khoảng thời gian, already, yet, just, recently, lately, so far, up to now, over/during/in the past (last) + số năm</i>.",
+    "<b>4. Hiện tại hoàn thành tiếp diễn (Present Perfect Continuous)</b>: <code>have / has + been + V-ing</code>.<br>• Cách dùng: Nhấn mạnh tính liên tục của hành động bắt đầu trong quá khứ và vẫn đang tiếp diễn ở hiện tại.<br>• Dấu hiệu: <i>all day, all morning, for three hours, since + mốc thời gian (đi với động từ kéo dài như work, wait, negotiate, rain)</i>."
+  ], "Thấy <code>currently / right now</code> chọn <b>am/is/are + V-ing</b>. Thấy <code>over the past/last + số năm</code> chọn <b>have/has + V3/ed</b> (hoặc <b>have/has been V-ing</b>). Các động từ <i>own, belong, know, have (sở hữu)</i> không bao giờ chia V-ing!", "Mẹo phân biệt nhanh 4 thì hiện tại",
+    [
+      ["The shuttle bus leaves every thirty minutes.", "Xe đưa đón khởi hành mỗi 30 phút (Hiện tại đơn - lịch trình)."],
+      ["Our IT team is currently upgrading the server.", "Đội IT của chúng tôi hiện đang nâng cấp máy chủ (Hiện tại tiếp diễn)."],
+      ["Revenue has increased by 15% over the past two years.", "Doanh thu đã tăng 15% trong 2 năm qua (Hiện tại hoàn thành)."],
+      ["We have been negotiating the contract since 9 A.M.", "Chúng tôi đã và đang đàm phán hợp đồng từ 9 giờ sáng (HTHT tiếp diễn)."]
+    ], [
+    ["The marketing department ____ a survey on customer preferences right now.", ["conducts", "is conducting", "conducted", "has conducted"], 1, "Dấu hiệu 'right now' → Hiện tại tiếp diễn (is conducting)."],
+    ["Ms. Gomez ____ the regional sales team for more than six years.", ["leads", "is leading", "has been leading", "led"], 2, "'for more than six years' nhấn mạnh quá trình liên tục đến hiện tại → Hiện tại hoàn thành tiếp diễn (has been leading)."],
+    ["This warehouse ____ to the Apex Corporation since 2018.", ["belongs", "is belonging", "has belonged", "has been belonging"], 2, "Có 'since 2018' và 'belong' là động từ trạng thái (không chia tiếp diễn) → Hiện tại hoàn thành (has belonged)."],
+    ["The international trade fair ____ place in Frankfurt every October.", ["takes", "is taking", "has taken", "took"], 0, "Dấu hiệu lặp lại định kỳ 'every October' → Hiện tại đơn (takes)."],
+    ["So far this quarter, our branch ____ over 200 new client accounts.", ["opens", "is opening", "has opened", "opened"], 2, "Dấu hiệu 'So far this quarter' (tính đến nay) → Hiện tại hoàn thành (has opened)."],
+    ["We ____ for the supplier's confirmation all morning, but they still haven't replied.", ["wait", "waited", "have been waiting", "are waited"], 2, "'all morning' + hành động kéo dài liên tục → Hiện tại hoàn thành tiếp diễn (have been waiting)."]
+  ]),
+
+  L("Hệ thống 4 Thì Quá khứ (Đơn · Tiếp diễn · Hoàn thành · QKHT Tiếp diễn)",
+    "Phân biệt rạch ròi chuỗi hành động xảy ra trong quá khứ (hành động cắt ngang vs. hành động xảy ra trước).", [
+    "<b>5. Quá khứ đơn (Past Simple)</b>: <code>S + V2/ed</code> · Phủ định/Nghi vấn: <code>did + V_inf</code>.<br>• Cách dùng: Hành động đã xảy ra và chấm dứt hoàn toàn tại một thời điểm xác định trong quá khứ.<br>• Dấu hiệu: <i>yesterday, last week/month/year, ... ago, in + năm quá khứ (in 2020), previously, formerly</i>.",
+    "<b>6. Quá khứ tiếp diễn (Past Continuous)</b>: <code>was / were + V-ing</code>.<br>• Cách dùng: Hành động đang diễn ra tại một thời điểm cụ thể trong quá khứ (<i>at 10 A.M. yesterday</i>), hoặc đang diễn ra thì có hành động khác cắt ngang (<code>While + QK tiếp diễn, QK đơn</code> / <code>QK tiếp diễn + when + QK đơn</code>).",
+    "<b>7. Quá khứ hoàn thành (Past Perfect)</b>: <code>had + V3/ed</code>.<br>• Cách dùng: Hành động xảy ra và hoàn tất <b>trước</b> một thời điểm hoặc một hành động khác trong quá khứ.<br>• Công thức vàng: <code>Before / By the time + S + V2/ed, S + had + V3/ed</code> và <code>After + S + had + V3/ed, S + V2/ed</code>.",
+    "<b>8. Quá khứ hoàn thành tiếp diễn (Past Perfect Continuous)</b>: <code>had + been + V-ing</code>.<br>• Cách dùng: Nhấn mạnh quá trình kéo dài liên tục của một hành động trước khi một hành động quá khứ khác xảy ra.<br>• Dấu hiệu: <i>for + khoảng thời gian + before + mệnh đề quá khứ đơn</i>."
+  ], "Đang làm thì bị cắt ngang → <b>was/were + V-ing</b>. Xảy ra trước một việc trong quá khứ (<i>before / by the time + V2/ed</i>) → <b>had + V3/ed</b> (nếu có thêm <i>for + khoảng thời gian</i> nhấn mạnh quá trình thì chọn <b>had been V-ing</b>).", "Sơ đồ trục thời gian Quá khứ",
+    [
+      ["The firm relocated its headquarters two years ago.", "Công ty đã dời trụ sở chính cách đây 2 năm (Quá khứ đơn)."],
+      ["While I was reviewing the invoice, I noticed an error.", "Trong lúc đang kiểm tra hóa đơn, tôi phát hiện một lỗi (QK tiếp diễn + QK đơn)."],
+      ["By the time the technician arrived, the system had crashed.", "Trước lúc kỹ thuật viên tới, hệ thống đã bị sập (Quá khứ hoàn thành)."],
+      ["He had been working there for ten years before he retired.", "Ông ấy đã làm việc ở đó suốt 10 năm trước khi nghỉ hưu (QKHT tiếp diễn)."]
+    ], [
+    ["Mr. Tanaka ____ as the chief financial officer before he retired last month.", ["serves", "has served", "had served", "will serve"], 2, "Hành động xảy ra trước một hành động quá khứ ('before he retired') → Quá khứ hoàn thành (had served)."],
+    ["While the technicians ____ the new software, the power suddenly went out.", ["install", "installed", "were installing", "have installed"], 2, "Hành động đang diễn ra ('While...') thì hành động khác cắt ngang ('went out') → Quá khứ tiếp diễn (were installing)."],
+    ["The board of directors ____ the merger proposal at yesterday's meeting.", ["approves", "approved", "has approved", "will approve"], 1, "Dấu hiệu 'at yesterday's meeting' → Quá khứ đơn (approved)."],
+    ["The team ____ on the prototype for six months before the project was cancelled.", ["works", "has been working", "had been working", "is working"], 2, "Kéo dài 'for six months' trước một mốc quá khứ ('before the project was cancelled') → QKHT tiếp diễn (had been working)."],
+    ["By the time the fire brigade arrived, the staff ____ the building safely.", ["evacuated", "have evacuated", "had evacuated", "will evacuate"], 2, "'By the time + V2/ed (arrived)' → vế chính chia Quá khứ hoàn thành (had evacuated)."],
+    ["At 3:00 P.M. yesterday, Ms. Lin ____ with potential investors in the conference room.", ["meets", "met", "was meeting", "has met"], 2, "Giờ cụ thể trong quá khứ ('At 3:00 P.M. yesterday') → Quá khứ tiếp diễn (was meeting)."]
+  ]),
+
+  L("Hệ thống 4 Thì Tương lai (Đơn · Tiếp diễn · Hoàn thành · TLHT Tiếp diễn)",
+    "Làm chủ 4 thì tương lai và quy tắc bất di bất dịch trong mệnh đề trạng ngữ chỉ thời gian.", [
+    "<b>9. Tương lai đơn (Future Simple)</b>: <code>will + V_inf</code> (hoặc <code>be going to + V_inf</code> cho kế hoạch đã định).<br>• Cách dùng: Dự đoán, thông báo sự kiện tương lai, lời hứa, quyết định tức thì.<br>• Dấu hiệu: <i>tomorrow, next week/month/year, upcoming, soon, shortly, in the near future</i>.",
+    "<b>10. Tương lai tiếp diễn (Future Continuous)</b>: <code>will + be + V-ing</code>.<br>• Cách dùng: Hành động sẽ đang diễn ra tại một thời điểm cụ thể trong tương lai.<br>• Dấu hiệu: <i>at this time tomorrow, at 9 A.M. next Monday, during the upcoming trip</i>.",
+    "<b>11. Tương lai hoàn thành (Future Perfect)</b>: <code>will + have + V3/ed</code>.<br>• Cách dùng: Hành động sẽ hoàn tất <b>trước</b> một mốc thời gian hoặc một hành động khác trong tương lai.<br>• Dấu hiệu vàng: <code>by + mốc tương lai</code> (<i>by tomorrow, by next June, by the end of this year</i>) hoặc <code>by the time + S + V(hiện tại đơn)</code>.",
+    "<b>12. Tương lai hoàn thành tiếp diễn (Future Perfect Continuous)</b>: <code>will + have + been + V-ing</code>.<br>• Cách dùng: Nhấn mạnh khoảng thời gian một hành động sẽ đã diễn ra liên tục tính đến một mốc trong tương lai.<br>• Công thức: <code>By + mốc tương lai, S + will have been V-ing + for + khoảng thời gian</code>."
+  ], "1) Thấy <code>by + mốc tương lai</code> hoặc <code>by the time + hiện tại đơn</code> → chọn ngay <b>will have + V3/ed</b> (nếu có thêm <i>for + khoảng thời gian</i> nhấn mạnh sự liên tục thì chọn <b>will have been + V-ing</b>). 2) Trong mệnh đề <i>when, while, before, after, as soon as, once, until, by the time</i>: <b>CẤM dùng will</b> (phải dùng Hiện tại đơn).", "Quy tắc vàng Thì tương lai",
+    [
+      ["The new branch will open next month.", "Chi nhánh mới sẽ mở cửa vào tháng tới (Tương lai đơn)."],
+      ["At 10 A.M. tomorrow, I will be presenting the budget.", "Lúc 10 giờ sáng mai, tôi sẽ đang trình bày ngân sách (Tương lai tiếp diễn)."],
+      ["We will have completed the audit by Friday.", "Chúng tôi sẽ hoàn tất đợt kiểm toán trước thứ Sáu (Tương lai hoàn thành)."],
+      ["By next May, she will have been working here for 10 years.", "Tính đến tháng 5 tới, cô ấy sẽ làm việc ở đây tròn 10 năm (TLHT tiếp diễn)."]
+    ], [
+    ["By the end of this fiscal year, the company ____ three new retail outlets.", ["opens", "opened", "will have opened", "has opened"], 2, "Dấu hiệu 'By the end of this fiscal year' (by + mốc tương lai) → Tương lai hoàn thành (will have opened)."],
+    ["At this time tomorrow, the delegates ____ the keynote speech in the main hall.", ["attend", "attended", "will be attending", "have attended"], 2, "Thời điểm cụ thể trong tương lai ('At this time tomorrow') → Tương lai tiếp diễn (will be attending)."],
+    ["By next December, Mr. Saito ____ our Tokyo branch for exactly twenty years.", ["manages", "managed", "will have been managing", "is managing"], 2, "'By next December' (mốc tương lai) + 'for twenty years' (khoảng thời gian liên tục) → TLHT tiếp diễn (will have been managing)."],
+    ["Please wait in the lobby until the receptionist ____ your name.", ["calls", "will call", "called", "would call"], 0, "Sau liên từ thời gian 'until' không dùng will, chia Hiện tại đơn → calls."],
+    ["By the time the new regulations ____ effect, all staff will have completed the training.", ["take", "will take", "took", "have taken"], 0, "Trong mệnh đề 'By the time', động từ chia Hiện tại đơn (take), vế chính chia Tương lai hoàn thành."],
+    ["The keynote speaker ____ at the airport shortly, so please be ready.", ["arrived", "has arrived", "will arrive", "had arrived"], 2, "Dấu hiệu 'shortly' (chẳng bao lâu nữa) → Tương lai đơn (will arrive)."]
+  ]),
+
+  L("Câu điều kiện Toàn diện (Loại 0, 1, 2, 3, Hỗn hợp, Đảo ngữ & Từ thay thế If)",
+    "Tổng hợp toàn bộ các dạng câu điều kiện từ cơ bản đến nâng cao xuất hiện trong đề thi TOEIC.", [
+    "<b>Loại 0 (Sự thật / Quy trình hiển nhiên)</b>: <code>If + S + V(hiện tại đơn), S + V(hiện tại đơn)</code>.<br>VD: <i>If the temperature exceeds 50°C, the machine stops automatically.</i>",
+    "<b>Loại 1 (Có thật ở hiện tại/tương lai)</b>: <code>If + S + V(hiện tại đơn), S + will / can / may / should + V_inf</code> (hoặc câu mệnh lệnh <code>Please + V_inf</code>).<br>• <b>Đảo ngữ Loại 1</b>: <code>Should + S + V_inf (nguyên mẫu không chia), ...</code>",
+    "<b>Loại 2 (Giả định trái với hiện tại)</b>: <code>If + S + V2/ed (to be luôn dùng were), S + would / could + V_inf</code>.<br>• <b>Đảo ngữ Loại 2</b>: <code>Were + S + (not) + Adj/N, ...</code> hoặc <code>Were + S + to V_inf, ...</code>",
+    "<b>Loại 3 (Giả định trái với quá khứ)</b>: <code>If + S + had + V3/ed, S + would / could + have + V3/ed</code>.<br>• <b>Đảo ngữ Loại 3</b>: <code>Had + S + (not) + V3/ed, ...</code>",
+    "<b>Điều kiện Hỗn hợp (Mixed Conditional)</b>: Giả định nguyên nhân trong quá khứ nhưng kết quả ở hiện tại (đi với <i>now, today, currently</i> ở vế sau):<br><code>If + S + had + V3/ed (Loại 3), S + would/could + V_inf (Loại 2) + now/today</code>.",
+    "<b>Các từ thay thế If</b>: <b>Unless</b> (= If... not: trừ khi) · <b>Provided (that) / Providing (that) / As long as / On condition that</b> (= miễn là, với điều kiện là) · <b>In case (+ S + V) / In the event of (+ N)</b> (= phòng khi) · <b>Otherwise</b> (= nếu không thì) · <b>Without / But for + N</b> (= Nếu không có...)."
+  ], "Nhìn vế đã cho để suy ra vế còn lại: 1) Vế chính là <i>Please + V / will + V</i> → vế If chia <b>Hiện tại đơn</b> (Đảo ngữ: <b>Should + S + V_inf</b>). 2) Vế chính là <i>would + V_inf</i> → vế If chia <b>V2/ed / were</b> (nhưng nếu có <i>now/today</i> mà vế If có <i>yesterday/last year</i> thì vế If chia <b>had + V3/ed</b>). 3) Vế chính là <i>would have + V3/ed</i> → vế If chia <b>had + V3/ed</b> (Đảo ngữ: <b>Had + S + V3/ed</b>).", "Bảng công thức đối chiếu 5 giây",
+    [
+      ["Should the package arrive damaged, please notify us immediately.", "Đảo ngữ loại 1: Nếu gói hàng đến bị hư hỏng, xin báo ngay cho chúng tôi."],
+      ["Were the company to relocate, many employees would resign.", "Đảo ngữ loại 2: Nếu công ty dời địa điểm, nhiều nhân viên sẽ nghỉ việc."],
+      ["Had we invested in that software last year, we would save a lot of time now.", "Điều kiện hỗn hợp (Quá khứ → Hiện tại): Nếu năm ngoái đầu tư phần mềm đó, giờ đã tiết kiệm nhiều thời gian."],
+      ["We will sign the lease provided that the landlord lowers the rent.", "Chúng tôi sẽ ký hợp đồng thuê miễn là chủ nhà giảm giá thuê."]
+    ], [
+    ["____ you experience any technical difficulties, please call our support hotline.", ["Should", "Were", "Had", "Unless"], 0, "Đảo ngữ câu điều kiện loại 1 (vế sau là câu mệnh lệnh 'please call'): Should + S + V nguyên mẫu."],
+    ["____ the board to approve the merger, the two firms would combine operations in June.", ["Should", "Were", "Had", "If"], 1, "Cấu trúc 'to approve' + vế sau 'would combine' → Đảo ngữ loại 2: Were + S + to V_inf."],
+    ["____ the contractor followed the blueprint carefully, the building would not have failed the inspection.", ["Should", "Were", "Had", "Unless"], 2, "Vế chính có 'would not have failed' (Loại 3) → Đảo ngữ loại 3: Had + S + V3/ed."],
+    ["If we had signed the contract last month, the project ____ underway now.", ["is", "will be", "would be", "would have been"], 2, "Điều kiện hỗn hợp: Vế If ở quá khứ ('last month' - had signed), vế chính có 'now' (hiện tại) → dùng 'would + V_inf' (would be)."],
+    ["The bank will approve the loan ____ the applicant provides sufficient collateral.", ["unless", "provided that", "in case of", "despite"], 1, "'provided that' + mệnh đề = miễn là / với điều kiện là."],
+    ["____ the generous sponsorship from local businesses, the charity gala would not have succeeded.", ["Unless", "If", "Without", "Provided"], 2, "Sau chỗ trống là cụm danh từ ('the generous sponsorship...') và vế chính ở điều kiện loại 3 → dùng giới từ 'Without' (= If it had not been for)."]
+  ]),
+
+  L("Mệnh đề quan hệ Toàn diện (Đại từ, Trạng từ, Giới từ & 3 Dạng Rút gọn)",
+    "Nắm trọn mọi quy tắc về Đại từ quan hệ, Trạng từ quan hệ, Giới từ + which/whom và 3 cách rút gọn mệnh đề quan hệ.", [
+    "<b>1. Đại từ quan hệ cơ bản</b>:<br>• Chỉ người: <b>who + V / S + V</b> (chủ ngữ) · <b>whom + S + V</b> (tân ngữ).<br>• Chỉ vật/sự việc: <b>which + V / S + V</b>.<br>• Thay thế cho cả người và vật (trong MĐQH xác định, <b>không</b> đứng sau dấu phẩy hoặc giới từ): <b>that</b>.<br>• Chỉ sở hữu (cho cả người và vật, theo sau bắt buộc là Danh từ không có mạo từ): <b>whose + N</b>.",
+    "<b>2. Trạng từ quan hệ & Giới từ + Đại từ quan hệ</b>:<br>• Nơi chốn: <b>where</b> (= <code>in/at/on + which</code>) + S + V (mệnh đề sau <i>where</i> phải đủ chủ ngữ và tân ngữ; nếu thiếu chủ ngữ/tân ngữ thì dùng <i>which</i>).<br>• Thời gian: <b>when</b> (= <code>on/in/at + which</code>) + S + V.<br>• Lý do: <b>why</b> (= <code>for which</code>) + S + V.<br>• Định lượng + giới từ: <code>some / many / most / all / both / neither + of + whom (người) / which (vật)</code>.",
+    "<b>3. Ba cách Rút gọn Mệnh đề quan hệ (Reduced Relative Clauses)</b>:<br>• <b>Dạng 1 – Hiện tại phân từ (V-ing)</b>: Khi động từ mang nghĩa <b>Chủ động</b> (phía sau thường có tân ngữ hoặc trạng từ). VD: <i>Anyone <b>wishing</b> (= who wishes) to attend...</i><br>• <b>Dạng 2 – Quá khứ phân từ (V3/ed)</b>: Khi động từ mang nghĩa <b>Bị động</b> (phía sau thường là giới từ <i>by, in, at, for, to, from</i>). VD: <i>Products <b>made</b> (= which are made) in Japan...</i><br>• <b>Dạng 3 – Động từ nguyên mẫu (to V / to be V3)</b>: Khi danh từ phía trước có số thứ tự (<i>the first, the second, the last</i>), so sánh nhất (<i>the best, the only</i>) hoặc mục đích. VD: <i>She was the first person <b>to arrive</b>.</i>"
+  ], "1) Có <b>dấu phẩy + some/most/all of ___</b> → nhìn danh từ trước dấu phẩy: người chọn <b>whom</b>, vật chọn <b>which</b> (tuyệt đối không chọn <i>them/they/who</i> vì không có liên từ <i>and</i>). 2) Giữa <b>which</b> và <b>where</b> sau danh từ chỉ địa điểm: nếu ngay sau chỗ trống là Động từ (thiếu chủ ngữ) → chọn <b>which</b>; nếu sau chỗ trống là S + V đầy đủ → chọn <b>where</b> (hoặc <b>in which</b>).", "Bẫy phân biệt nâng cao 900+",
+    [
+      ["The hotel where (= at which) the seminar was held is near the station.", "Khách sạn nơi hội thảo được tổ chức nằm gần nhà ga."],
+      ["We interviewed ten candidates, three of whom were hired.", "Chúng tôi phỏng vấn 10 ứng viên, 3 người trong số đó đã được tuyển."],
+      ["Passengers traveling with young children may board first.", "Hành khách đi cùng trẻ nhỏ có thể lên máy bay trước (Rút gọn chủ động V-ing)."],
+      ["Ms. Tran was the only applicant to meet all the requirements.", "Cô Trần là ứng viên duy nhất đáp ứng mọi yêu cầu (Rút gọn to-V sau the only)."]
+    ], [
+    ["The factory ____ we visited last week uses state-of-the-art solar panels.", ["where", "which", "in which", "whose"], 1, "Động từ 'visited' là ngoại động từ đang thiếu tân ngữ (visit the factory) → dùng đại từ 'which' (không dùng 'where')."],
+    ["The convention center ____ the annual tech expo takes place can hold 5,000 attendees.", ["which", "where", "whom", "whose"], 1, "Mệnh đề sau 'the annual tech expo takes place' đã đủ S + V nội động từ, cần trạng từ chỉ nơi chốn → where (= at which)."],
+    ["The company launched five new products this year, two of ____ have already become bestsellers.", ["them", "they", "which", "that"], 2, "Hai mệnh đề nối bằng dấu phẩy (không có 'and') → cần đại từ quan hệ sau giới từ 'of' chỉ vật ('products') → two of which."],
+    ["Ms. Vo was the first researcher ____ the flaw in the chemical formula.", ["discover", "discovered", "to discover", "discovering"], 2, "Sau cụm có số thứ tự ('the first researcher'), mệnh đề quan hệ rút gọn thành 'to + V_inf' → to discover."],
+    ["All defective items ____ to the warehouse will be replaced free of charge.", ["return", "returning", "returned", "returns"], 2, "Câu đã có động từ chính 'will be replaced'. 'items' bị trả lại + sau chỗ trống là giới từ 'to' → rút gọn bị động dùng V3/ed (returned)."],
+    ["Anyone ____ to register for the orientation session should contact the HR department by noon.", ["wish", "wishes", "wishing", "wished"], 2, "Câu đã có động từ chính 'should contact'. 'Anyone' chủ động muốn đăng ký (who wishes) → rút gọn thành V-ing (wishing)."]
+  ])
+];
+
+GRAM.toeic.unshift(...FULL_TENSES_COND_REL);
 
 Object.values(GRAM).forEach(L => L.forEach(g => g[3].forEach(q => {
   if (q[1].includes("—")) return;
